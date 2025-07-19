@@ -4,74 +4,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using restaurant_reservation;
 
 #nullable disable
 
 namespace restaurant_reservation.Migrations
 {
     [DbContext(typeof(RestaurantContext))]
-    [Migration("20250717164938_AddedTabletable")]
-    partial class AddedTabletable
+    [Migration("20250719193030_DrinkFoodTablesColumnsChanged")]
+    partial class DrinkFoodTablesColumnsChanged
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
-
-            modelBuilder.Entity("restaurant_reservation.Models.Admin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Admins");
-                });
-
-            modelBuilder.Entity("restaurant_reservation.Models.Customer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Customers");
-                });
 
             modelBuilder.Entity("restaurant_reservation.Models.Drink", b =>
                 {
@@ -81,10 +28,6 @@ namespace restaurant_reservation.Migrations
 
                     b.Property<int>("Calories")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
 
                     b.Property<bool>("ContainsCaffeine")
                         .HasColumnType("INTEGER");
@@ -97,9 +40,6 @@ namespace restaurant_reservation.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsAlcoholic")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsCarbonated")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MenuId")
@@ -128,14 +68,7 @@ namespace restaurant_reservation.Migrations
                     b.Property<int>("Calories")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("ContainsGluten")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ContainsNuts")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
@@ -143,9 +76,6 @@ namespace restaurant_reservation.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsVegan")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsVegetarian")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MenuId")
@@ -216,6 +146,69 @@ namespace restaurant_reservation.Migrations
                     b.ToTable("Reservations");
                 });
 
+            modelBuilder.Entity("restaurant_reservation.Models.Table", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsReserved")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReservedUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Seats")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId");
+
+                    b.ToTable("Tables");
+                });
+
+            modelBuilder.Entity("restaurant_reservation.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("restaurant_reservation.Models.Drink", b =>
                 {
                     b.HasOne("restaurant_reservation.Models.Menu", null)
@@ -232,7 +225,7 @@ namespace restaurant_reservation.Migrations
 
             modelBuilder.Entity("restaurant_reservation.Models.Reservation", b =>
                 {
-                    b.HasOne("restaurant_reservation.Models.Customer", "Customer")
+                    b.HasOne("restaurant_reservation.Models.User", "Customer")
                         .WithMany("Reservations")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -241,9 +234,13 @@ namespace restaurant_reservation.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("restaurant_reservation.Models.Customer", b =>
+            modelBuilder.Entity("restaurant_reservation.Models.Table", b =>
                 {
-                    b.Navigation("Reservations");
+                    b.HasOne("restaurant_reservation.Models.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId");
+
+                    b.Navigation("Reservation");
                 });
 
             modelBuilder.Entity("restaurant_reservation.Models.Menu", b =>
@@ -251,6 +248,11 @@ namespace restaurant_reservation.Migrations
                     b.Navigation("Drinks");
 
                     b.Navigation("Foods");
+                });
+
+            modelBuilder.Entity("restaurant_reservation.Models.User", b =>
+                {
+                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }

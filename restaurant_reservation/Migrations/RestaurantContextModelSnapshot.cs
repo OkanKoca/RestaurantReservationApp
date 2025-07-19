@@ -3,7 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using restaurant_reservation.Models;
+using restaurant_reservation;
 
 #nullable disable
 
@@ -26,10 +26,6 @@ namespace restaurant_reservation.Migrations
                     b.Property<int>("Calories")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("ContainsCaffeine")
                         .HasColumnType("INTEGER");
 
@@ -41,9 +37,6 @@ namespace restaurant_reservation.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsAlcoholic")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsCarbonated")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MenuId")
@@ -72,14 +65,7 @@ namespace restaurant_reservation.Migrations
                     b.Property<int>("Calories")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("ContainsGluten")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ContainsNuts")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
@@ -87,9 +73,6 @@ namespace restaurant_reservation.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsVegan")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsVegetarian")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MenuId")
@@ -106,7 +89,7 @@ namespace restaurant_reservation.Migrations
 
                     b.HasIndex("MenuId");
 
-                    b.ToTable("Food");
+                    b.ToTable("Foods");
                 });
 
             modelBuilder.Entity("restaurant_reservation.Models.Menu", b =>

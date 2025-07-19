@@ -29,7 +29,14 @@ namespace restaurant_reservation.Data.Concrete
 
         public Table GetById(int id)
         {
-            return _restaurantContext.Tables.Find(id) ?? throw new KeyNotFoundException($"Table with ID {id} not found.");
+            var table = _restaurantContext.Tables.FirstOrDefault(t=> t.Id == id );
+
+            if (table == null)
+            {
+                throw new KeyNotFoundException($"Table with ID {id} not found.");
+            }
+
+            return table;
         }
 
         public Table GetByNumber(int number)

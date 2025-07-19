@@ -52,18 +52,13 @@ namespace restaurant_reservation.Controllers
 
         // PUT api/<TableController>/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, TableDto tableDto)
+        public IActionResult UpdateTable(int id, TableDto tableDto)
         {
             if (tableDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
             var table = _tableRepository.GetById(id);
-
-            if (table == null)
-            {
-                return NotFound($"Table with ID {id} not found.");
-            }
 
             table.Number = tableDto.Number;
             table.Seats = tableDto.Seats;

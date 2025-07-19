@@ -7,9 +7,8 @@
         public User Customer { get; set; } = null!;
         public required DateTime ReservationDate { get; set; }
         public required int NumberOfGuests { get; set; }
-        public bool IsConfirmed { get; set; }
+        public bool IsConfirmed { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        //public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
 public enum ReservationStatus

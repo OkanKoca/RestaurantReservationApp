@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using restaurant_reservation;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Data.Concrete;
-using restaurant_reservation.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +15,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ITableRepository, TableRepository>();
+builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
+builder.Services.AddScoped<IFoodRepository, FoodRepository>();
 
 var app = builder.Build();
 
