@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation.Data.Abstract;
-using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -16,7 +15,6 @@ namespace restaurant_reservation.Controllers
         {
             _drinkRepository = drinkRepository;
         }
-
         
         [HttpGet]
         public List<Drink> GetAllDrinks()
@@ -33,23 +31,12 @@ namespace restaurant_reservation.Controllers
 
         // POST api/<DrinkController>
         [HttpPost]
-        public IActionResult Post(DrinkDto drinkDto)
+        public IActionResult Post(Drink drink)
         {
-            if(drinkDto == null || !ModelState.IsValid)
+            if(drink == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-
-            var drink = new Drink
-            {
-                Name = drinkDto.Name,
-                Description = drinkDto.Description,
-                Calories = drinkDto.Calories,
-                Price = drinkDto.Price,
-                IsAlcoholic = drinkDto.IsAlcoholic,
-                ContainsCaffeine = drinkDto.ContainsCaffeine,
-                ContainsSugar = drinkDto.ContainsSugar
-            };
 
             _drinkRepository.Add(drink);
 
@@ -58,24 +45,24 @@ namespace restaurant_reservation.Controllers
 
         // PUT api/<DrinkController>/5
         [HttpPut("{id}")]
-        public IActionResult UpdateDrink(int id, DrinkDto drinkDto)
+        public IActionResult UpdateDrink(int id, Drink drink)
         {
-            if (drinkDto == null || !ModelState.IsValid)
+            if (drink == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var drink = _drinkRepository.GetById(id);
+            var drinkToUpdate = _drinkRepository.GetById(id);
 
-            drink.Name = drinkDto.Name;
-            drink.Description = drinkDto.Description;
-            drink.Calories = drinkDto.Calories;
-            drink.Price = drinkDto.Price;
-            drink.IsAlcoholic = drinkDto.IsAlcoholic;
-            drink.ContainsCaffeine = drinkDto.ContainsCaffeine;
-            drink.ContainsSugar = drinkDto.ContainsSugar;
+            drinkToUpdate.Name = drink.Name;
+            drinkToUpdate.Description = drink.Description;
+            drinkToUpdate.Calories = drink.Calories;
+            drinkToUpdate.Price = drink.Price;
+            drinkToUpdate.IsAlcoholic = drink.IsAlcoholic;
+            drinkToUpdate.ContainsCaffeine = drink.ContainsCaffeine;
+            drinkToUpdate.ContainsSugar = drink.ContainsSugar;
 
-            _drinkRepository.Update(drink);
+            _drinkRepository.Update(drinkToUpdate);
 
             return NoContent();
         }

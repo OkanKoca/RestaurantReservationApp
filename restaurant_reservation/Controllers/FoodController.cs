@@ -32,22 +32,12 @@ namespace restaurant_reservation.Controllers
 
         // POST api/<foodController>
         [HttpPost]
-        public IActionResult Post(FoodDto foodDto)
+        public IActionResult Post(Food food)
         {
-            if(foodDto == null || !ModelState.IsValid)
+            if(food == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-
-            var food = new Food
-            {
-                Name = foodDto.Name,
-                Description = foodDto.Description,
-                Calories = foodDto.Calories,
-                Price = foodDto.Price,
-                IsVegan = foodDto.IsVegan,
-                ContainsGluten = foodDto.ContainsGluten
-            };
 
             _foodRepository.Add(food);
 
@@ -56,23 +46,23 @@ namespace restaurant_reservation.Controllers
 
         // PUT api/<foodController>/5
         [HttpPut("{id}")]
-        public IActionResult Updatefood(int id, FoodDto foodDto)
+        public IActionResult Updatefood(int id, Food food)
         {
-            if (foodDto == null || !ModelState.IsValid)
+            if (food == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var food = _foodRepository.GetById(id);
+            var foodToUpdate = _foodRepository.GetById(id);
 
-            food.Name = foodDto.Name;
-            food.Description = foodDto.Description;
-            food.Calories = foodDto.Calories;
-            food.Price = foodDto.Price;
-            food.IsVegan = foodDto.IsVegan;
-            food.ContainsGluten = foodDto.ContainsGluten;
+            foodToUpdate.Name = food.Name;
+            foodToUpdate.Description = food.Description;
+            foodToUpdate.Calories = food.Calories;
+            foodToUpdate.Price = food.Price;
+            foodToUpdate.IsVegan = food.IsVegan;
+            foodToUpdate.ContainsGluten = food.ContainsGluten;
 
-            _foodRepository.Update(food);
+            _foodRepository.Update(foodToUpdate);
 
             return NoContent();
         }
