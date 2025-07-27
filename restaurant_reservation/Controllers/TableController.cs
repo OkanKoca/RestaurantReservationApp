@@ -2,6 +2,7 @@
 using restaurant_reservation.Models;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -19,9 +20,24 @@ namespace restaurant_reservation.Controllers
         }
 
         [HttpGet]
-        public List<Table> GetAllTables()
+        public List<TableDto> GetAllTables()
         {
-            return _tableRepository.Tables();
+            var tableDtos = new List<TableDto>();
+            var tables = _tableRepository.Tables();
+
+            foreach(var table in tables)
+            {
+                tableDtos.Add(
+                    new TableDto
+                    {
+                        Number = table.Number,
+                        Seats = table.Seats,
+                        IsReserved = table.IsReserved
+                    }
+                );
+            }
+
+            return tableDtos;
         }
 
         // GET api/<TableController>/5

@@ -9,6 +9,6 @@ namespace restaurant_reservation.Data.Abstract
         void Delete(int id);
         Table GetById(int id);
         Table GetByNumber(int number);
-        List<Table> Tables(); 
+        IQueryable<Table> Tables(); 
     }
 }

@@ -1,24 +1,32 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace restaurant_reservation.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersApiController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly RestaurantContext _context;
-        public UsersController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RestaurantContext restaurantContext) {
+        private readonly IConfiguration _configuration;
+        public UsersApiController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RestaurantContext restaurantContext, IConfiguration configuration) {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = restaurantContext;
+            _configuration = configuration;
         }
         // GET: api/<UsersController>
         
@@ -35,6 +43,30 @@ namespace restaurant_reservation.Controllers
         public AppUser Get(int id)
         {
             return _context.Users.FirstOrDefault(u => u.Id == id) ?? throw new KeyNotFoundException("User not found.");
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return NotFound();
+
+            return Ok(new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.PhoneNumber
+            });
         }
 
         // POST api/<UsersController>
@@ -83,7 +115,7 @@ namespace restaurant_reservation.Controllers
 
             if(result.Succeeded)
             {
-                return Ok(); // jwt token generation can be added here
+                return Ok(new {token = GenerateJWT(user)}); 
             }
 
             return Unauthorized(new { Message = "Invalid email or password." });
@@ -105,9 +137,44 @@ namespace restaurant_reservation.Controllers
 
         // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
-            _context.Users.Remove(_context.Users.FirstOrDefault(u => u.Id == id) ?? throw new KeyNotFoundException("User not found."));
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+
+            if(user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            _context.Users.Remove(user);
+            return Ok();
+        }
+
+        private object GenerateJWT(AppUser user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("AppSettings:SecretKey").Value ?? "");
+            var userRoles = _userManager.GetRolesAsync(user);
+            var userRole = userRoles.Result.FirstOrDefault() ?? "Customer"; // Default to Customer if no roles assigned
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new Claim(ClaimTypes.Name, user.UserName ?? ""),
+                        new Claim(ClaimTypes.Role, userRole.ToString() ?? "")
+                    }
+                ),
+                Expires = DateTime.UtcNow.AddDays(1),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

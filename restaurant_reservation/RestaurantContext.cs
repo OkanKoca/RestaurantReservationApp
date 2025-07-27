@@ -27,11 +27,11 @@ namespace restaurant_reservation
                 new AppRole { Id = 1, Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "abc" },
                 new AppRole { Id = 2, Name = "Customer", NormalizedName = "CUSTOMER", ConcurrencyStamp = "def" }
             );
-
         }
 
         public DbSet<Table> Tables { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
+        public DbSet<GuestReservation> GuestReservations { get; set; } = null!;
         public DbSet<Food> Foods { get; set; } = null!;
         public DbSet<Drink> Drinks { get; set; } = null!;
         public DbSet<Menu> Menus { get; set; } = null!;

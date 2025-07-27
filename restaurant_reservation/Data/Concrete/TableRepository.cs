@@ -22,9 +22,9 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext.SaveChanges();
         }
 
-        public List<Table> Tables()
+        public IQueryable<Table> Tables()
         {
-            return _restaurantContext.Tables.ToList();
+            return _restaurantContext.Tables;
         }
 
         public Table GetById(int id)
