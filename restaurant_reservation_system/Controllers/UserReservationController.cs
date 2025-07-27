@@ -1,65 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation.Models;
-using restaurant_reservation_system.Models;
+using restaurant_reservation_system.Models.Dto;
+using restaurant_reservation_system.Models.ViewModel;
 using System.Net.Http.Headers;
 
 namespace restaurant_reservation_system.Controllers
 {
     public class UserReservationController : Controller
     {
-
-        //private async Task<CustomerInfo> GetCustomerInfo()
-        //{
-        //    var token = HttpContext.Session.GetString("token");
-        //    if (string.IsNullOrEmpty(token))
-        //        return null;
-
-        //    var handler = new JwtSecurityTokenHandler();
-        //    var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
-
-        //    if (jsonToken == null) return null;
-
-        //    return new CustomerInfo
-        //    {
-        //        Id = int.Parse(jsonToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value),
-        //        Email = jsonToken.Claims.First(claim => claim.Type == ClaimTypes.Name).Value,
-        //        Role = jsonToken.Claims.First(claim => claim.Type == ClaimTypes.Role).Value
-        //    };
-        //}
-
-        //private async Task<CustomerInfo?> GetCustomerInfo()
-        //{
-        //    var token = HttpContext.Session.GetString("token");
-        //    if (string.IsNullOrEmpty(token))
-        //        return null;
-
-        //    try
-        //    {
-        //        var handler = new JwtSecurityTokenHandler();
-        //        var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
-
-        //        if (jsonToken == null) return null;
-
-        //        var idClaim = jsonToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier);
-        //        var emailClaim = jsonToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name);
-        //        var roleClaim = jsonToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role);
-
-        //        if (idClaim == null || emailClaim == null || roleClaim == null)
-        //            return null;
-
-        //        return new CustomerInfo
-        //        {
-        //            Id = int.Parse(idClaim.Value),
-        //            Email = emailClaim.Value,
-        //            Role = roleClaim.Value
-        //        };
-        //    }
-        //    catch
-        //    {
-        //        return null;
-        //    }
-        //}
-
         public async Task<IActionResult> Create()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("token")))
@@ -80,7 +28,7 @@ namespace restaurant_reservation_system.Controllers
                     var customerDetails = await response.Content.ReadFromJsonAsync<AppUser>();
                     var viewModel = new UserReservationViewModel
                     {
-                        Id = customerDetails.Id,
+                        CustomerId = customerDetails.Id,
                         CustomerName = $"{customerDetails.FirstName} {customerDetails.LastName}",
                         CustomerEmail = customerDetails.Email,
                         CustomerPhone = customerDetails.PhoneNumber
@@ -109,7 +57,7 @@ namespace restaurant_reservation_system.Controllers
 
             var reservationDto = new UserReservationDto
             {
-                Id = model.Id,
+                CustomerId = model.CustomerId,
                 ReservationDate = model.ReservationDate,
                 ReservationHour = model.ReservationHour,
                 NumberOfGuests = model.NumberOfGuests
@@ -135,11 +83,46 @@ namespace restaurant_reservation_system.Controllers
             }
         }
 
-    }
-    public class CustomerInfo
-    {
-        public int Id { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
+        public async Task<IActionResult> MyReservations()
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("token")))
+            {
+                return RedirectToAction("Login", "Users");
+            }
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:7284/api/");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", HttpContext.Session.GetString("token"));
+
+                var response = await client.GetAsync("UserReservation/MyReservations");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var customerDetails = await response.Content.ReadFromJsonAsync<MyReservationsDto>();
+                    var reservations = new List<MyReservationsViewModel>();
+                    
+                    foreach(var reservation in customerDetails.Reservations)
+                    {
+                        reservations.Add(new MyReservationsViewModel
+                        {
+                            Id = reservation.CustomerId,
+                            Status = reservation.Status,
+                            ReservationDate = reservation.ReservationDate,
+                            ReservationHour = reservation.ReservationDate.Hour.ToString(),
+                            NumberOfGuests = reservation.NumberOfGuests,
+                            CreatedAt = reservation.CreatedAt
+                        }); 
+                    }
+
+                    return View(reservations);
+                }
+
+                TempData["ErrorMessage"] = "Reservation informations couldn't be loaded.";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
     }
 }

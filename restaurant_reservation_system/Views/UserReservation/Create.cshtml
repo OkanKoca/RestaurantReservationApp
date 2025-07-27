@@ -1,4 +1,5 @@
-﻿@model UserReservationViewModel
+﻿@using restaurant_reservation_system.Models.ViewModel
+@model UserReservationViewModel
 
 
 <div class="row justify-content-center">
@@ -9,7 +10,8 @@
                     <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
 
                     <form method="post" asp-action="BookReservation">
-                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <div asp-validation-summary="All" class="text-danger"></div>,
+                        <input asp-for="CustomerId" hidden />
                         <div class="mb-3">
                             <label asp-for="CustomerName" class="form-label"></label>
                             <input asp-for="CustomerName" class="form-control" disabled />
@@ -43,9 +45,6 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Book Reservation</button>
                     </form>
-                    <br />
-                    <a href="#" class="card-link">Card link</a>
-                    <a href="#" class="card-link">Another link</a>
                 </div>
         </div>
     </div>

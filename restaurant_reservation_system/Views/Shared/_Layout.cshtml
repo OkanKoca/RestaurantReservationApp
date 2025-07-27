@@ -40,6 +40,10 @@
                         @if (!string.IsNullOrEmpty(Context.Session.GetString("token")))
                         {
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="UserReservation" asp-action="MyReservations">My Reservations</a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Logout">Logout</a>
                             </li>
                         }

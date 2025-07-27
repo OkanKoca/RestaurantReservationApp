@@ -1,0 +1,89 @@
+﻿@using restaurant_reservation_system.Models.ViewModel
+@{
+    ViewData["Title"] = "My Reservations";
+}
+
+@model List<MyReservationsViewModel>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">My Reservations</h2>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @{
+            int i = 1;
+        }
+        @foreach (var reservation in Model)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            @if(reservation.ReservationDate < DateTime.Now)
+                            {
+                                <span class="badge bg-danger">Outdated</span>
+                            }
+                            else
+                            {
+                                @if (reservation.Status == "Confirmed")
+                                {
+                                    <span class="badge bg-success">Confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Reservation #@i</h5>
+
+                        <div class="mb-3">
+                            <i class="bi bi-calendar-date"></i>
+                            <span class="ms-2">@reservation.ReservationDate.ToShortDateString()</span>
+                        </div>
+                        <div class="mb-3">
+                            <i class="bi bi-clock"></i>
+                            <span class="ms-2">@reservation.ReservationHour:00</span>
+                        </div>
+                        <div class="mb-3">
+                            <i class="bi bi-people"></i>
+                            <span class="ms-2">@reservation.NumberOfGuests guests</span>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-calendar-check"></i>
+                            <span class="ms-2">Created: @reservation.CreatedAt.ToShortDateString() @reservation.CreatedAt.Hour:00</span>
+                        </div>
+
+                        <br />
+                        <button href="#" class="btn-outline-primary btn-sm">Cancel</button>
+                        <button href="#" class="btn-outline-primary btn-sm">Update</button>
+                    </div>
+                </div>
+            </div>
+
+            i++;
+        }
+    </div>
+</div>
+
+
+<style >
+    .card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .status-confirmed {
+        color: #28a745;
+    }
+
+    .status-pending {
+        color: #dc3545;
+    }
+</style>

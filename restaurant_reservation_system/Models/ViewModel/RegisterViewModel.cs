@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace restaurant_reservation_system.Models
+namespace restaurant_reservation_system.Models.ViewModel
 {
     public class RegisterViewModel
     {

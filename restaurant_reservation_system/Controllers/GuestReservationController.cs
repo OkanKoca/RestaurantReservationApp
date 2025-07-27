@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using restaurant_reservation_system.Models;
+using restaurant_reservation_system.Models.ViewModel;
 
 namespace restaurant_reservation_system.Controllers
 {

@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,10 +17,12 @@ namespace restaurant_reservation.Controllers
     {
         private readonly IUserReservationRepository _userReservationRepository;
         private readonly ITableRepository _tableRepository;
-        public UserReservationController(IUserReservationRepository userReservationRepository, ITableRepository tableRepository)
+        private readonly UserManager<AppUser> _userManager;
+        public UserReservationController(IUserReservationRepository userReservationRepository, ITableRepository tableRepository, UserManager<AppUser> userManager)
         {
             _userReservationRepository = userReservationRepository;
             _tableRepository = tableRepository;
+            _userManager = userManager;
         }
         // GET: api/<UserReservationController>
         [Authorize(Roles = "Admin")]
@@ -75,10 +79,12 @@ namespace restaurant_reservation.Controllers
             var table = available_tables.First();
 
             DateTime requestedDateWithHour = new DateTime(requestedDate.Year, requestedDate.Month, requestedDate.Day, requestedHour, 0, 0);
+            
+            var customer = await _userManager.FindByIdAsync(userReservationDto.CustomerId.ToString());
 
             var userReservation = new Reservation
             {
-                Customer = userReservationDto.Customer,
+                Customer = customer,
                 NumberOfGuests = userReservationDto.NumberOfGuests,
                 ReservationDate = requestedDateWithHour,
                 TableId = table.Id,
@@ -118,6 +124,55 @@ namespace restaurant_reservation.Controllers
             _userReservationRepository.Update(existingReservation);
 
             return NoContent();
+        }
+
+        [Authorize]
+        [HttpGet("myreservations")]
+        public async Task<IActionResult> GetUserReservations()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+
+            if (user == null)
+                return NotFound();
+
+            var reservationsDb = await _userReservationRepository.UserReservations()
+                .Where(r => r.Customer.Id == int.Parse(userId))
+                .Include(r => r.Table)
+                .ToListAsync();
+
+            List<UserReservationDto> reservations = new List<UserReservationDto>();
+
+            foreach(var reservation in reservationsDb)
+            {
+                var reservationDto = new UserReservationDto
+                {
+                    CustomerId = reservation.Customer.Id,
+                    NumberOfGuests = reservation.NumberOfGuests,
+                    ReservationDate = reservation.ReservationDate,
+                    ReservationHour = reservation.ReservationDate.Hour.ToString(),
+                    Status = reservation.Status.ToString(),
+                    CreatedAt = reservation.CreatedAt
+                };
+
+                reservations.Add(reservationDto);
+            }
+            
+
+            return Ok(new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.PhoneNumber,
+                reservations
+            });
         }
 
         // DELETE api/<UserReservationController>/5

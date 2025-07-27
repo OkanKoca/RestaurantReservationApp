@@ -17,6 +17,6 @@
     {
         Pending,
         Confirmed,
-        Rejected
+        Cancelled
     }
 }

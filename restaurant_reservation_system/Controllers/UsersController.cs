@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using restaurant_reservation_system.Models;
+using restaurant_reservation_system.Models.ViewModel;
 using System.Net.Http.Headers;
 //using Microsoft.AspNetCore.Authentication;
 //using System.Security.Claims;

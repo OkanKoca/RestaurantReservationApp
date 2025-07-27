@@ -1,8 +1,8 @@
-﻿namespace restaurant_reservation_system.Models
+﻿namespace restaurant_reservation_system.Models.ViewModel
 {
     public class UserReservationViewModel
     {
-        public int Id { get; set; }
+        public int CustomerId { get; set; }
         public string? CustomerName { get; set; }
         public string? CustomerEmail { get; set; }
         public string? CustomerPhone { get; set; }

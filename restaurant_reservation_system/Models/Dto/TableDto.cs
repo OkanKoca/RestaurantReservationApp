@@ -1,4 +1,4 @@
-﻿namespace restaurant_reservation_system.Models
+﻿namespace restaurant_reservation_system.Models.Dto
 {
     public class TableDto
     {
