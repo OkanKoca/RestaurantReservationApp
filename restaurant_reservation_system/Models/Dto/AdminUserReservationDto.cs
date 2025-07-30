@@ -1,16 +1,16 @@
-﻿namespace restaurant_reservation_system.Models.ViewModel
+﻿namespace restaurant_reservation_system.Models.Dto
 {
-    public class UserReservationViewModel
+    public class AdminUserReservationDto
     {
         public int Id { get; set; }
         public int CustomerId { get; set; }
         public string? CustomerName { get; set; }
         public string? CustomerEmail { get; set; }
         public string? CustomerPhone { get; set; }
-        public DateTime ReservationDate { get; set; }
-        public int NumberOfGuests { get; set; }
-        public string Status { get; set; } = "Pending";
+        public required DateTime ReservationDate { get; set; }
+        public required int NumberOfGuests { get; set; }
         public string? ReservationHour { get; set; }
+        public string Status { get; set; } = "Pending"; // Default status is "Pending"
         public DateTime CreatedAt { get; set; }
     }
 }

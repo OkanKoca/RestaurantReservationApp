@@ -1,4 +1,5 @@
-﻿using restaurant_reservation.Data.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
 
 namespace restaurant_reservation.Data.Concrete
@@ -11,7 +12,7 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext = restaurantContext;
         }
 
-        public void Add(Reservation userReservation)
+        public void Add(UserReservation userReservation)
         {
             _restaurantContext.Reservations.Add(userReservation);
             _restaurantContext.SaveChanges();
@@ -23,12 +24,12 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext.SaveChanges();
         }
 
-        public IQueryable<Reservation> UserReservations()
+        public IQueryable<UserReservation> UserReservations()
         {
-            return _restaurantContext.Reservations;
+            return _restaurantContext.Reservations.Include(r => r.Customer);
         }
 
-        public Reservation GetById(int id)
+        public UserReservation GetById(int id)
         {
             var userReservation = _restaurantContext.Reservations.FirstOrDefault(t => t.Id == id);
 
@@ -40,7 +41,7 @@ namespace restaurant_reservation.Data.Concrete
             return userReservation;
         }
 
-        public void Update(Reservation userReservation)
+        public void Update(UserReservation userReservation)
         {
             _restaurantContext.Reservations.Update(userReservation);
             _restaurantContext.SaveChanges();

@@ -30,7 +30,7 @@ namespace restaurant_reservation
         }
 
         public DbSet<Table> Tables { get; set; } = null!;
-        public DbSet<Reservation> Reservations { get; set; } = null!;
+        public DbSet<UserReservation> Reservations { get; set; } = null!;
         public DbSet<GuestReservation> GuestReservations { get; set; } = null!;
         public DbSet<Food> Foods { get; set; } = null!;
         public DbSet<Drink> Drinks { get; set; } = null!;

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation_system.Models.ViewModel;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 //using Microsoft.AspNetCore.Authentication;
 //using System.Security.Claims;
 
@@ -36,27 +38,18 @@ namespace restaurant_reservation_system.Controllers
 
                         if (tokenResponse != null && !string.IsNullOrEmpty(tokenResponse.Token))
                         {
-                            // Store the token in session
                             HttpContext.Session.SetString("token", tokenResponse.Token);
 
-                            //// Create claims for cookie authentication
-                            //var claims = new List<Claim>
-                            //{
-                            //    new Claim(ClaimTypes.Name, model.Email)
-                            //};
+                            var handler = new JwtSecurityTokenHandler();
+                            var jwtToken = handler.ReadJwtToken(tokenResponse.Token);
+                            //var role = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "Customer";
 
-                            //var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role); // somehow it returns null 
+                            var roleClaimRaw = jwtToken.Claims.FirstOrDefault(c => c.Type == "role"); // this is an alternative way if it is null
 
-                            //var authProperties = new AuthenticationProperties
-                            //{
-                            //    IsPersistent = true,
-                            //    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(1)
-                            //};
+                            var role = roleClaim?.Value ?? roleClaimRaw?.Value ?? "Customer";
 
-                            //await HttpContext.SignInAsync(
-                            //    CookieAuthenticationDefaults.AuthenticationScheme,
-                            //    new ClaimsPrincipal(claimsIdentity),
-                            //    authProperties);
+                            HttpContext.Session.SetString("role", role);
 
                             TempData["SuccessMessage"] = "Logged in successfully!!";
                             return RedirectToAction("Index", "Home");

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using restaurant_reservation;
 
@@ -10,9 +11,11 @@ using restaurant_reservation;
 namespace restaurant_reservation.Migrations
 {
     [DbContext(typeof(RestaurantContext))]
-    partial class RestaurantContextModelSnapshot : ModelSnapshot
+    [Migration("20250728194304_AddedCreatedAtColumnGuestReservation")]
+    partial class AddedCreatedAtColumnGuestReservation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -367,37 +370,11 @@ namespace restaurant_reservation.Migrations
                     b.ToTable("Menus");
                 });
 
-            modelBuilder.Entity("restaurant_reservation.Models.Table", b =>
+            modelBuilder.Entity("restaurant_reservation.Models.Reservation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsReserved")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("ReservedUntil")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Seats")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Tables");
-                });
-
-            modelBuilder.Entity("restaurant_reservation.Models.UserReservation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("INTEGER");
@@ -425,6 +402,29 @@ namespace restaurant_reservation.Migrations
                     b.HasIndex("TableId");
 
                     b.ToTable("Reservations");
+                });
+
+            modelBuilder.Entity("restaurant_reservation.Models.Table", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsReserved")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReservedUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Seats")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tables");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -503,7 +503,7 @@ namespace restaurant_reservation.Migrations
                     b.Navigation("Table");
                 });
 
-            modelBuilder.Entity("restaurant_reservation.Models.UserReservation", b =>
+            modelBuilder.Entity("restaurant_reservation.Models.Reservation", b =>
                 {
                     b.HasOne("restaurant_reservation.Models.AppUser", "Customer")
                         .WithMany("Reservations")

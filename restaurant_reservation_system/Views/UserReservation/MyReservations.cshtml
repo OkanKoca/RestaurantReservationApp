@@ -52,7 +52,7 @@
                         </div>
                         <div class="text-muted small">
                             <i class="bi bi-calendar-check"></i>
-                            <span class="ms-2">Created: @reservation.CreatedAt.ToShortDateString() @reservation.CreatedAt.Hour:00</span>
+                            <span class="ms-2">Created: @reservation.CreatedAt.ToShortDateString() @reservation.CreatedAt.ToShortTimeString()</span>
                         </div>
 
                         <br />
@@ -77,13 +77,5 @@
     .card:hover {
         transform: translateY(-5px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    .status-confirmed {
-        color: #28a745;
-    }
-
-    .status-pending {
-        color: #dc3545;
     }
 </style>

@@ -83,7 +83,8 @@ namespace restaurant_reservation.Controllers
                 NumberOfGuests = guestReservationDto.NumberOfGuests,
                 ReservationDate = requestedDateWithHour,
                 TableId = table.Id,
-                Table = table
+                Table = table,
+                CreatedAt = DateTime.UtcNow
             };
 
             _guestReservationRepository.Add(guestReservation);
@@ -111,9 +112,10 @@ namespace restaurant_reservation.Controllers
             existingReservation.PhoneNumber = guestReservation.PhoneNumber;
             existingReservation.NumberOfGuests = guestReservation.NumberOfGuests;
             existingReservation.ReservationDate = guestReservation.ReservationDate;
-            existingReservation.TableId = guestReservation.TableId;
             existingReservation.Table = _tableRepository.GetById(guestReservation.TableId);
             existingReservation.Status = ReservationStatus.Confirmed.ToString();
+
+            existingReservation.Table.GuestReservations.Remove(existingReservation);    
 
             existingReservation.Table.GuestReservations.Add(existingReservation);
 

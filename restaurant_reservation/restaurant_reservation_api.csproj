@@ -19,4 +19,25 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Dto\GuestReservationDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Dto\LoginDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Dto\MenuDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Dto\TableDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Dto\UserDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Dto\UserReservationDto.cs">
+      <CustomToolNamespace>restaurant_reservation_api.Dto</CustomToolNamespace>
+    </Compile>
+  </ItemGroup>
+
 </Project>

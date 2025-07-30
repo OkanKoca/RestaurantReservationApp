@@ -1,0 +1,205 @@
+﻿@using restaurant_reservation_system.Models.Dto
+@using restaurant_reservation_system.Models.ViewModel
+@{
+    ViewData["Title"] = "Reservations"; 
+}
+
+@model AdminReservationsViewModel
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">User And Guest Reservations</h2>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @{
+            int i = 1;
+        }
+        @foreach (var userReservation in Model.UserReservations)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            @if (userReservation.ReservationDate < DateTime.Now)
+                            {
+                                <span class="badge bg-danger">Outdated</span>
+                            }
+                            else
+                            {
+                                @if (userReservation.Status == "Confirmed")
+                                {
+                                    <span class="badge bg-success">Confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">User Reservation #@i</h5>
+
+                        <input asp-for="@userReservation.Id" hidden/>
+
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.CustomerName</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.CustomerEmail</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.CustomerPhone</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.ReservationDate.ToShortDateString()</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.ReservationHour:00</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@userReservation.NumberOfGuests guests</span>
+                        </div>
+                        <div class="text-muted small">
+                            <span class="ms-2">Created: @userReservation.CreatedAt.ToShortDateString() @userReservation.CreatedAt.ToShortTimeString()</span>
+                        </div>
+
+                        <br />
+                        <form asp-controller="Admin" asp-action="DeleteUserReservation" method="post" style="display: inline;" id="deleteForm">
+                            <input type="hidden" name="id" value="@userReservation.Id" />
+                            <button type="submit" class="btn-outline-primary btn-sm" onclick="showDeleteModal(@userReservation.Id)">Delete</button>
+                        </form>
+
+                        @if(userReservation.Status == "Pending")
+                        {
+                            <form asp-controller="Admin" asp-action="UpdateUserReservationStatus" method="post" style="display: inline;" id="confirmForm">
+                                <input type="hidden" name="id" value="@userReservation.Id" />
+                                <input type="hidden" name="status" value="Confirmed" />
+                                <button type="submit" class="btn-outline-primary btn-sm" onclick="showConfirmModal(@userReservation.Id)">Confirm Reservation</button>
+                            </form>
+                        }
+                        else if (userReservation.Status == "Confirmed")
+                        {
+                            <form asp-controller="Admin" asp-action="UpdateUserReservationStatus" method="post" style="display: inline;" id="cancelForm">
+                                <input type="hidden" name="id" value="@userReservation.Id" />
+                                <input type="hidden" name="status" value="Pending" />
+                                <button type="submit" class="btn-outline-primary btn-sm" onclick="showCancelConfirmationModal(@userReservation.Id)">Cancel Confirmation</button>
+                            </form>
+                        } 
+
+                    </div>
+                </div>
+            </div>
+
+            i++;
+        }
+        @{
+            i = 1;
+        }
+        @foreach (var guestReservation in Model.GuestReservations)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header bg-black text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            @if (guestReservation.ReservationDate < DateTime.Now)
+                            {
+                                <span class="badge bg-danger">Outdated</span>
+                            }
+                            else
+                            {
+                                @if (guestReservation.Status == "Confirmed")
+                                {
+                                    <span class="badge bg-success">Confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Guest Reservation #@i</h5>
+
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.FullName</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.Email</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.PhoneNumber</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.ReservationDate.ToShortDateString()</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.ReservationDate.ToShortTimeString()</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="ms-2">@guestReservation.NumberOfGuests guests</span>
+                        </div>
+                        <div class="text-muted small">
+                            <span class="ms-2">Created: @guestReservation.CreatedAt.ToShortDateString() @guestReservation.CreatedAt.ToShortTimeString()</span>
+                        </div>
+
+                        <br />
+                        <form asp-controller="Admin" asp-action="DeleteGuestReservation" method="post" style="display: inline;" id = "deleteForm">
+                            <input type="hidden" name="id" value="@guestReservation.Id" />
+                            <button type="submit" class="btn-outline-primary btn-sm" onclick="showDeleteModal(@guestReservation.Id)">Delete</button>
+                        </form>
+                        <button class="btn-outline-primary btn-sm">Update</button>
+                    </div>
+                </div>
+            </div>
+
+            i++;
+        }
+    </div>
+
+    <partial name="_DeleteConfirmationModal" />
+
+</div>
+
+@section Scripts {
+    <script>
+        function showDeleteModal(reservationId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            document.getElementById('confirmDeleteBtn').onclick = function () {
+                document.getElementById('deleteForm').submit();
+            };
+            modal.show();
+        }
+
+        function showConfirmModal(reservationId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            document.getElementById('confirmDeleteBtn').onclick = function () {
+                document.getElementById('confirmForm').submit();
+            };
+            modal.show();
+        }
+
+        function showCancelConfirmationModal(reservationId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            document.getElementById('confirmDeleteBtn').onclick = function () {
+                document.getElementById('cancelForm').submit();
+            };
+            modal.show();
+        }
+    </script>
+}
+
+
+<style>
+    .card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>

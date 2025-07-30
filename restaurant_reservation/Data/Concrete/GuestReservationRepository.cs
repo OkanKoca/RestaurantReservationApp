@@ -1,4 +1,5 @@
-﻿using restaurant_reservation.Data.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
 
 namespace restaurant_reservation.Data.Concrete

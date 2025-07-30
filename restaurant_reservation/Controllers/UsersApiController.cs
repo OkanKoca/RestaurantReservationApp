@@ -164,7 +164,8 @@ namespace restaurant_reservation.Controllers
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.UserName ?? ""),
-                        new Claim(ClaimTypes.Role, userRole.ToString() ?? "")
+                        new Claim(ClaimTypes.Role, userRole.ToString() ?? ""),
+                        new Claim("role", userRole)
                     }
                 ),
                 Expires = DateTime.UtcNow.AddDays(1),

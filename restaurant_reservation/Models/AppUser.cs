@@ -8,6 +8,6 @@ namespace restaurant_reservation.Models
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string FullName { get => $"{FirstName} {LastName}"; }
-        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        public List<UserReservation> Reservations { get; set; } = new List<UserReservation>();
     }
 }

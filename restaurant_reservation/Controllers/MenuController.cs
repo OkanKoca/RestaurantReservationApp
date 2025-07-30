@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
@@ -36,6 +37,7 @@ namespace restaurant_reservation.Controllers
 
         // POST api/<MenuController>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult Post(MenuDto menuDto)
         {
             if (menuDto == null || !ModelState.IsValid)
@@ -61,6 +63,7 @@ namespace restaurant_reservation.Controllers
 
         // PUT api/<MenuController>/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public IActionResult UpdateMenu(int id, MenuDto menuDto)
         {
             if (menuDto == null || !ModelState.IsValid)
@@ -85,6 +88,7 @@ namespace restaurant_reservation.Controllers
 
         // DELETE api/<MenuController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public void Delete(int id)
         {
             _menuRepository.Delete(id);

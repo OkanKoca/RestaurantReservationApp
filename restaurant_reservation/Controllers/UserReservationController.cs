@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Dto;
+using System.Collections.Generic;
 using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -27,15 +29,38 @@ namespace restaurant_reservation.Controllers
         // GET: api/<UserReservationController>
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public List<Reservation> GetAllUserReservations()
+        public List<AdminUserReservationDto> GetAllUserReservations()
         {
-            return _userReservationRepository.UserReservations().ToList();
+            List <AdminUserReservationDto> userReservations = new List<AdminUserReservationDto>();
+
+            foreach (var reservation in _userReservationRepository.UserReservations().ToList())
+            {
+                if(reservation.Customer == null)
+                {
+                    continue; // Skip reservations without a customer
+                }
+                userReservations.Add(new AdminUserReservationDto
+                {
+                    Id = reservation.Id,
+                    CustomerId = reservation.Customer.Id,
+                    CustomerName = $"{reservation.Customer.FirstName} {reservation.Customer.LastName}",
+                    CustomerEmail = reservation.Customer.Email,
+                    CustomerPhone = reservation.Customer.PhoneNumber,
+                    NumberOfGuests = reservation.NumberOfGuests,
+                    ReservationDate = reservation.ReservationDate,
+                    ReservationHour = reservation.ReservationDate.Hour.ToString(),
+                    Status = reservation.Status.ToString(),
+                    CreatedAt = reservation.CreatedAt
+                });
+            }
+            
+            return userReservations;
         }
 
         // GET api/<UserReservationController>/5
         [Authorize(Roles = "Admin")]   
         [HttpGet("{id}")]
-        public Reservation GetUserReservation(int id)
+        public UserReservation GetUserReservation(int id)
         {
             return _userReservationRepository.GetById(id);
         }
@@ -82,13 +107,14 @@ namespace restaurant_reservation.Controllers
             
             var customer = await _userManager.FindByIdAsync(userReservationDto.CustomerId.ToString());
 
-            var userReservation = new Reservation
+            var userReservation = new UserReservation
             {
                 Customer = customer,
                 NumberOfGuests = userReservationDto.NumberOfGuests,
                 ReservationDate = requestedDateWithHour,
                 TableId = table.Id,
-                Table = table
+                Table = table,
+                CreatedAt = DateTime.UtcNow,
             };
 
             _userReservationRepository.Add(userReservation);
@@ -99,27 +125,56 @@ namespace restaurant_reservation.Controllers
         // PUT api/<UserReservationController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult ConfirmUserReservation(int id, Reservation userReservation)
+        public IActionResult UpdateReservation(int id, UserReservationDto userReservationDto)
         {
-            if (userReservation == null || userReservation.Id != id)
+            if (userReservationDto == null)
             {
-                return BadRequest("Invalid reservation data or ID mismatch.");
+                return BadRequest("Invalid reservation data.");
             }
+
             var existingReservation = _userReservationRepository.GetById(id);
 
             if (existingReservation == null)
             {
-                return NotFound($"Guest reservation with ID {id} not found.");
+                return NotFound($"User reservation with ID {id} not found.");
             }
 
-            existingReservation.Customer = userReservation.Customer;    
-            existingReservation.NumberOfGuests = userReservation.NumberOfGuests;
-            existingReservation.ReservationDate = userReservation.ReservationDate;
-            existingReservation.TableId = userReservation.TableId;
-            existingReservation.Table = _tableRepository.GetById(userReservation.TableId);
-            existingReservation.Status = ReservationStatus.Confirmed.ToString();
+            existingReservation.NumberOfGuests = userReservationDto.NumberOfGuests;
+            existingReservation.ReservationDate = userReservationDto.ReservationDate;
+            existingReservation.ReservationDate = new DateTime(existingReservation.ReservationDate.Year, existingReservation.ReservationDate.Month, existingReservation.ReservationDate.Day, int.Parse(userReservationDto.ReservationHour.Split(':')[0]), 0, 0);
+            //existingReservation.TableId = userReservation.TableId;
+            //existingReservation.Table = _tableRepository.GetById(userReservation.TableId);
+            existingReservation.Status = userReservationDto.Status;
+
+            existingReservation.Table.UserReservations.Remove(existingReservation);
 
             existingReservation.Table.UserReservations.Add(existingReservation);
+
+            _userReservationRepository.Update(existingReservation);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult UpdateReservationStatus(int id)
+        {
+
+            var existingReservation = _userReservationRepository.GetById(id);
+
+            if (existingReservation == null)
+            {
+                return NotFound($"User reservation with ID {id} not found.");
+            }
+
+            if(existingReservation.Status == ReservationStatus.Confirmed.ToString())
+            {
+                existingReservation.Status = ReservationStatus.Pending.ToString();
+            } 
+            else if(existingReservation.Status == ReservationStatus.Pending.ToString())
+            {
+                existingReservation.Status = ReservationStatus.Confirmed.ToString();
+            }
 
             _userReservationRepository.Update(existingReservation);
 

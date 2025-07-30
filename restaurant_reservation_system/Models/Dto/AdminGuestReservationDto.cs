@@ -1,6 +1,8 @@
-﻿namespace restaurant_reservation.Models
+﻿using restaurant_reservation.Models;
+
+namespace restaurant_reservation_system.Models.Dto
 {
-    public class GuestReservation
+    public class AdminGuestReservationDto
     {
         public int Id { get; set; }
         public string Status { get; set; } = ReservationStatus.Pending.ToString();
@@ -8,9 +10,8 @@
         public required string Email { get; set; }
         public required string PhoneNumber { get; set; }
         public int NumberOfGuests { get; set; }
-        public int TableId { get; set; }
-        public Table? Table { get; set; }
         public DateTime ReservationDate { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? ReservationHour => ReservationDate.Hour.ToString("D2"); 
+        public DateTime CreatedAt { get; set; }
     }
 }

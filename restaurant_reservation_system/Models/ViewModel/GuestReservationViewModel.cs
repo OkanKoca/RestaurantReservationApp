@@ -11,8 +11,7 @@ namespace restaurant_reservation_system.Models.ViewModel
         [Required, Phone]
         [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Invalid phone number format.")]
         public required string PhoneNumber { get; set; }
-        //[Required]
-        //public int TableId { get; set; }
+
         [Range(1, 10, ErrorMessage = "Number of guests must be between 1 and 10.")]
         public int? NumberOfGuests { get; set; }
         [Required]
