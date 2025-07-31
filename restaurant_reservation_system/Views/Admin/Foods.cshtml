@@ -89,6 +89,15 @@
                             <span asp-validation-for="Price" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Menu</label>
+                            <select asp-for=MenuId class="form-select">
+                                @foreach(var menu in ViewBag.Menus)
+                                {
+                                    <option value="@menu.Id">@menu.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <div class="form-check">
                                 <input asp-for="IsVegan" type="checkbox" class="form-check-input" />
                                 <label asp-for="IsVegan" class="form-check-label"></label>

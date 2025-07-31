@@ -8,6 +8,6 @@ namespace restaurant_reservation.Data.Abstract
         void Update(Food food);
         void Delete(int id);
         Food GetById(int id);
-        List<Food> Foods();
+        IQueryable<Food> Foods();
     }
 }

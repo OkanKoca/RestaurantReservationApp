@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Dto;
+using System.Collections.Generic;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,9 +26,18 @@ namespace restaurant_reservation.Controllers
         }
 
         [HttpGet]
-        public List<Menu> GetAllMenus()
+        public List<MenuDto> GetAllMenus()
         {
-            return _menuRepository.Menus();
+            return _menuRepository.Menus()
+            .Select(m => new MenuDto
+            {
+                Id = m.Id,
+                Name = m.Name,
+                Description = m.Description,
+                DrinkIds = m.Drinks.Select(d => d.Id).ToList(),
+                FoodIds = m.Foods.Select(f => f.Id).ToList()
+            })
+            .ToList();
         }
 
         // GET api/<MenuController>/5
@@ -33,6 +45,59 @@ namespace restaurant_reservation.Controllers
         public Menu GetMenu(int id)
         {
             return _menuRepository.GetById(id);
+        }
+
+        [HttpGet("{id}/drinks")]
+        public List<DrinkDto> GetMenuDrinks(int id)
+        {
+            List<DrinkDto> drinks = new List<DrinkDto>();
+
+            if(_menuRepository.GetById(id).Drinks != null)
+            {
+                foreach(var drink in _menuRepository.GetById(id).Drinks)
+                {
+                    drinks.Add(new DrinkDto
+                    {
+                        Id = drink.Id,
+                        Name = drink.Name,
+                        Description = drink.Description,
+                        Calories = drink.Calories,
+                        Price = drink.Price,
+                        MenuId = drink.MenuId,
+                        IsAlcoholic = drink.IsAlcoholic,
+                        ContainsCaffeine = drink.ContainsCaffeine,
+                        ContainsSugar = drink.ContainsSugar
+                    });
+                }
+            }
+
+            return drinks;
+        }
+
+        [HttpGet("{id}/foods")]
+        public List<FoodDto> GetMenuFood(int id)
+        {
+            List<FoodDto> foods = new List<FoodDto>();
+
+            if (_menuRepository.GetById(id).Foods != null)
+            {
+                foreach (var food in _menuRepository.GetById(id).Foods)
+                {
+                    foods.Add(new FoodDto
+                    {
+                        Id = food.Id,
+                        Name = food.Name,
+                        Description = food.Description,
+                        Calories = food.Calories,
+                        Price = food.Price,
+                        MenuId = food.MenuId,
+                        IsVegan= food.IsVegan,
+                        ContainsGluten = food.ContainsGluten
+                    });
+                }
+            }
+
+            return foods;
         }
 
         // POST api/<MenuController>

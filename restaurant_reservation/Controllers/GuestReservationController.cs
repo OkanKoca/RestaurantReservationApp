@@ -22,12 +22,42 @@ namespace restaurant_reservation.Controllers
             _tableRepository = tableRepository;
             _userReservationRepository = userReservationRepository;
         }
+
         // GET: api/<GuestReservationController>
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public List<GuestReservation> GetAllGuestReservations()
         {
+            // made a status check here to see if a reservation is outdated
+
+            var reservations = _guestReservationRepository.GuestReservations().ToList();
+
+            foreach (var reservation in reservations)
+            {
+                if (isOutdated(reservation.Id) && !string.Equals(reservation.Status.ToString(), ReservationStatus.Outdated.ToString()))
+                {
+                    reservation.Status = ReservationStatus.Outdated.ToString();
+                    _guestReservationRepository.Update(reservation);
+                }
+            }
+
             return _guestReservationRepository.GuestReservations().ToList();
+        }
+        private bool isOutdated(int id)
+        {
+            var reservation = _guestReservationRepository.GetById(id);
+
+            if (reservation == null)
+            {
+                return false;
+            }
+
+            if (reservation.ReservationDate < DateTime.UtcNow.ToLocalTime())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // GET api/<GuestReservationController>/5
@@ -95,7 +125,7 @@ namespace restaurant_reservation.Controllers
         // PUT api/<GuestReservationController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult ConfirmGuestReservation(int id, GuestReservation guestReservation)
+        public IActionResult UpdateGuestReservation(int id, GuestReservation guestReservation)
         {
             if (guestReservation == null || guestReservation.Id != id)
             {
@@ -136,6 +166,31 @@ namespace restaurant_reservation.Controllers
                 return NotFound($"Guest reservation with ID {id} not found.");
             }
             _guestReservationRepository.Delete(id);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult UpdateReservationStatus(int id)
+        {
+            var existingReservation = _guestReservationRepository.GetById(id);
+
+            if (existingReservation == null)
+            {
+                return NotFound($"Guest reservation with ID {id} not found.");
+            }
+
+            if (existingReservation.Status == ReservationStatus.Confirmed.ToString())
+            {
+                existingReservation.Status = ReservationStatus.Pending.ToString();
+            }
+            else if (existingReservation.Status == ReservationStatus.Pending.ToString())
+            {
+                existingReservation.Status = ReservationStatus.Confirmed.ToString();
+            }
+
+            _guestReservationRepository.Update(existingReservation);
 
             return NoContent();
         }

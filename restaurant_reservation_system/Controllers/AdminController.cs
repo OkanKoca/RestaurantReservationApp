@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using restaurant_reservation_system.Models.Dto;
 using restaurant_reservation_system.Models.ViewModel;
-using System.Diagnostics;
 
 namespace restaurant_reservation_system.Controllers
 {
     public class AdminController : Controller
     {
-
         private readonly HttpClient client;
 
         public AdminController(IConfiguration config)
@@ -189,6 +186,32 @@ namespace restaurant_reservation_system.Controllers
             return RedirectToAction("Reservations");
         }
 
+        [HttpPost]
+        public IActionResult UpdateGuestReservationStatus(int id)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:7284/api/");
+
+                var token = HttpContext.Session.GetString("token");
+
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = client.PutAsync($"GuestReservation/{id}/status", null).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "Reservation status updated successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = $"Failed to update reservation status. Status: {response.StatusCode}";
+                }
+            }
+            return RedirectToAction("Reservations");
+        }
+
         #endregion
 
         #region Users
@@ -203,19 +226,26 @@ namespace restaurant_reservation_system.Controllers
         public IActionResult Foods()
         {
             List<FoodDto> foods = new List<FoodDto>();
+            List<MenuDto> menus = new List<MenuDto>();
 
             var token = HttpContext.Session.GetString("token");
 
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-            var response = client.GetFromJsonAsync<List<FoodDto>>("Food").Result;
+            var foodResponse = client.GetFromJsonAsync<List<FoodDto>>("Food").Result;
+            var menuResponse = client.GetFromJsonAsync<List<MenuDto>>("Menu").Result;
 
-            if(response != null)
+            if (foodResponse != null)
             {
-                foods.AddRange(response);
+                foods.AddRange(foodResponse);
+            }
+
+            if (menuResponse != null) { 
+                menus.AddRange(menuResponse);
             }
 
             ViewBag.Foods = foods;
+            ViewBag.Menus = menus;
 
             return View();
         }
@@ -272,19 +302,27 @@ namespace restaurant_reservation_system.Controllers
         public IActionResult Drinks()
         {
             List<DrinkDto> drinks = new List<DrinkDto>();
+            List<MenuDto> menus = new List<MenuDto>();
 
             var token = HttpContext.Session.GetString("token");
 
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-            var response = client.GetFromJsonAsync<List<DrinkDto>>("Drink").Result;
+            var drinkResponse = client.GetFromJsonAsync<List<DrinkDto>>("Drink").Result;
+            var menuResponse = client.GetFromJsonAsync<List<MenuDto>>("Menu").Result;
 
-            if (response != null)
+            if (drinkResponse != null)
             {
-                drinks.AddRange(response);
+                drinks.AddRange(drinkResponse);
+            }
+
+            if(menuResponse != null)
+            {
+                menus.AddRange(menuResponse);
             }
 
             ViewBag.Drinks = drinks;
+            ViewBag.Menus = menus;
 
             return View();
         }
@@ -337,15 +375,65 @@ namespace restaurant_reservation_system.Controllers
         #endregion
 
         #region Menus
-        public IActionResult Menus()
+        public IActionResult Menus(int? id = 1)
         {
-            return View();
+            List<MenuDto> menus = new List<MenuDto>();
+            List<DrinkDto> drinks = new List<DrinkDto>();
+            List<FoodDto> foods = new List<FoodDto>();
+
+            var response = client.GetFromJsonAsync<List<MenuDto>>("Menu");
+            var drinkResponse = client.GetFromJsonAsync<List<DrinkDto>>($"Menu/{id}/drinks");
+            var foodResponse = client.GetFromJsonAsync<List<FoodDto>>($"Menu/{id}/foods");
+
+            if(response != null)
+            {
+                menus.AddRange(response.Result);
+            }
+
+            if(drinkResponse != null)
+            {
+                drinks.AddRange(drinkResponse.Result);
+            }
+
+            if(foodResponse != null)
+            {
+                foods.AddRange(foodResponse.Result);
+            }
+
+            ViewBag.Drinks = drinks;
+            ViewBag.Foods = foods;  
+
+            return View(menus);
         }
 
+        [HttpPost]
         public IActionResult CreateMenu()
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult DeleteMenu(int id)
+        {
+            var token = HttpContext.Session.GetString("token");
+
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = client.DeleteAsync($"Menu/{id}").Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Menu item deleted successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = $"Failed to delete menu item. Status: {response.StatusCode}";
+            }
+
+            return RedirectToAction("Menus");
+        }
+
         #endregion
 
     }

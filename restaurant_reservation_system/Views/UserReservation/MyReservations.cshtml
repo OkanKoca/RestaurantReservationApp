@@ -1,4 +1,5 @@
-﻿@using restaurant_reservation_system.Models.ViewModel
+﻿@using restaurant_reservation.Models
+@using restaurant_reservation_system.Models.ViewModel
 @{
     ViewData["Title"] = "My Reservations";
 }
@@ -18,20 +19,17 @@
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
                         <div class="d-flex justify-content-between align-items-center">
-                            @if(reservation.ReservationDate < DateTime.Now)
+                            @if (reservation.Status == ReservationStatus.Confirmed.ToString())
                             {
-                                <span class="badge bg-danger">Outdated</span>
+                                <span class="badge bg-success">@reservation.Status</span>
                             }
-                            else
+                            else if(reservation.Status == ReservationStatus.Pending.ToString())
                             {
-                                @if (reservation.Status == "Confirmed")
-                                {
-                                    <span class="badge bg-success">Confirmed</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning">Pending</span>
-                                }
+                                <span class="badge bg-warning">@reservation.Status</span>
+                            }
+                            else if(reservation.Status == ReservationStatus.Outdated.ToString())
+                            {
+                                <span class="badge bg-danger">@reservation.Status</span>
                             }
                         </div>
                     </div>
@@ -40,7 +38,7 @@
 
                         <div class="mb-3">
                             <i class="bi bi-calendar-date"></i>
-                            <span class="ms-2">@reservation.ReservationDate.ToShortDateString()</span>
+                            <span class="ms-2">@reservation.ReservationDateLocal.ToShortDateString()</span>
                         </div>
                         <div class="mb-3">
                             <i class="bi bi-clock"></i>
@@ -52,12 +50,11 @@
                         </div>
                         <div class="text-muted small">
                             <i class="bi bi-calendar-check"></i>
-                            <span class="ms-2">Created: @reservation.CreatedAt.ToShortDateString() @reservation.CreatedAt.ToShortTimeString()</span>
+                            <span class="ms-2">Created: @reservation.CreatedAtLocal.ToShortDateString() @reservation.CreatedAtLocal.ToShortTimeString()</span>
                         </div>
 
                         <br />
                         <button href="#" class="btn-outline-primary btn-sm">Cancel</button>
-                        <button href="#" class="btn-outline-primary btn-sm">Update</button>
                     </div>
                 </div>
             </div>

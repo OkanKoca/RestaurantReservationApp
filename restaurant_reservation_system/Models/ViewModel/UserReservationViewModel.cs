@@ -8,9 +8,11 @@
         public string? CustomerEmail { get; set; }
         public string? CustomerPhone { get; set; }
         public DateTime ReservationDate { get; set; }
+        public DateTime ReservationDateLocal => ReservationDate.ToLocalTime();
         public int NumberOfGuests { get; set; }
         public string Status { get; set; } = "Pending";
         public string? ReservationHour { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAtLocal => CreatedAt.ToLocalTime();
     }
 }

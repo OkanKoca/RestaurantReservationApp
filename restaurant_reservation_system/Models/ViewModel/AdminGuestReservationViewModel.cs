@@ -11,7 +11,9 @@ namespace restaurant_reservation_system.Models.ViewModel
         public required string PhoneNumber { get; set; }
         public int NumberOfGuests { get; set; }
         public DateTime ReservationDate { get; set; }
+        public DateTime ReservationDateLocal => ReservationDate.ToLocalTime();
         public string? ReservationHour { get; set; } 
-        public DateTime CreatedAt { get; set; } 
+        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAtLocal => CreatedAt.ToLocalTime();
     }
 }

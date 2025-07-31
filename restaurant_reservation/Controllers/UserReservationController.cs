@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
+using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation_api.Dto;
@@ -37,8 +38,15 @@ namespace restaurant_reservation.Controllers
             {
                 if(reservation.Customer == null)
                 {
-                    continue; // Skip reservations without a customer
+                    continue;
                 }
+
+                if(isOutdated(reservation.Id))
+                {
+                    reservation.Status = ReservationStatus.Outdated.ToString();
+                    _userReservationRepository.Update(reservation);
+                }
+
                 userReservations.Add(new AdminUserReservationDto
                 {
                     Id = reservation.Id,
@@ -56,6 +64,22 @@ namespace restaurant_reservation.Controllers
             
             return userReservations;
         }
+        private bool isOutdated(int id)
+        {
+            var reservation = _userReservationRepository.GetById(id);
+
+            if (reservation == null)
+            {
+                return false;
+            }
+
+            if (reservation.ReservationDate < DateTime.UtcNow.ToLocalTime())
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         // GET api/<UserReservationController>/5
         [Authorize(Roles = "Admin")]   
@@ -64,7 +88,6 @@ namespace restaurant_reservation.Controllers
         {
             return _userReservationRepository.GetById(id);
         }
-
 
 
         // POST api/<UserReservationController>

@@ -48,11 +48,10 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext.SaveChanges();
         }
 
-        public List<Menu> Menus()
+        public IQueryable<Menu> Menus()
         {
             return _restaurantContext.Menus.Include(f => f.Foods)
-                .Include(d => d.Drinks)
-                .ToList();
+                .Include(d => d.Drinks);
         }
 
 

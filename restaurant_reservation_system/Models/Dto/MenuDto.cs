@@ -1,4 +1,4 @@
-﻿namespace restaurant_reservation.Dto
+﻿namespace restaurant_reservation_system.Models.Dto
 {
     public class MenuDto
     {
@@ -7,5 +7,6 @@
         public string Description { get; set; } = null!;
         public List<int> DrinkIds { get; set; } = new List<int>();
         public List<int> FoodIds { get; set; } = new List<int>();
+
     }
 }

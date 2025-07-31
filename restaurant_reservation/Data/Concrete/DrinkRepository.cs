@@ -12,6 +12,13 @@ namespace restaurant_reservation.Data.Concrete
         }
         public void Add(Drink drink)
         {
+            var menu = _restaurantContext.Menus.FirstOrDefault(m=> m.Id == drink.MenuId);
+
+            if (menu != null)
+            {
+                drink.Menu = menu;
+            }
+
             _restaurantContext.Drinks.Add(drink);
             _restaurantContext.SaveChanges();
         }
@@ -45,9 +52,9 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext.SaveChanges();
         }
 
-        public List<Drink> Drinks()
+        public IQueryable<Drink> Drinks()
         {
-            return _restaurantContext.Drinks.ToList(); 
+            return _restaurantContext.Drinks; 
         }
 
 

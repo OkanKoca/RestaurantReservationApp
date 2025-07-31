@@ -1,6 +1,6 @@
-﻿namespace restaurant_reservation.Models.Abstracts
+﻿namespace restaurant_reservation_api.Dto
 {
-    public abstract class Consumable
+    public class FoodDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
@@ -8,6 +8,7 @@
         public int Calories { get; set; } = 0;
         public float Price { get; set; }
         public int MenuId { get; set; }
-        public Menu? Menu { get; set; }
+        public bool IsVegan { get; set; }
+        public bool ContainsGluten { get; set; }
     }
 }

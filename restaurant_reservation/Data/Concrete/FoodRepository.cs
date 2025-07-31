@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
 
@@ -45,9 +46,9 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext.SaveChanges();
         }
 
-        public List<Food> Foods()
+        public IQueryable<Food> Foods()
         {
-            return _restaurantContext.Foods.ToList(); 
+            return _restaurantContext.Foods; 
         }
 
 

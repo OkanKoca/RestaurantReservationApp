@@ -11,7 +11,7 @@ namespace restaurant_reservation_system.Models.Dto
         public required string PhoneNumber { get; set; }
         public int NumberOfGuests { get; set; }
         public DateTime ReservationDate { get; set; }
-        public string? ReservationHour => ReservationDate.Hour.ToString("D2"); 
+        public string? ReservationHour => ReservationDate.Hour.ToString();
         public DateTime CreatedAt { get; set; }
     }
 }
