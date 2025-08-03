@@ -1,0 +1,203 @@
+﻿@using restaurant_reservation.Models
+@using restaurant_reservation_system.Models.Dto
+@model List<TableDto>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="d-flex gap-2">
+                        <a href="/Admin/Tables" class="btn @(ViewBag.SelectedTableId == null ? "btn-primary" : "btn-outline-primary")">
+                            All Tables
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @if (ViewBag.SelectedTableId == null)
+            {
+                <!-- DateTime Picker-->
+                <div class="mb-4">
+                    <form method="get" class="d-flex gap-2">
+                        <input type="date" name="date" 
+                               class="form-control" 
+                               value="@(((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd"))" />
+                        <button type="submit" class="btn btn-primary">Check Occupancy</button>
+                    </form>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var table in Model)
+                    {
+                        var occupancy = ViewData[$"TableOccupancy_{table.Id}"] as double? ?? 0;
+                        var occupancyClass = occupancy switch
+                        {
+                            var x when x < 30 => "bg-success",
+                            var x when x < 70 => "bg-warning",
+                            _ => "bg-danger"
+                        };
+
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title mb-0">Table #@table.Number</h5>
+                                        <span class="badge @(table.IsReserved ? "bg-danger" : "bg-success")">
+                                            @(table.IsReserved ? "Reserved" : "Available")
+                                        </span>
+                                    </div>
+                                    <p class="card-text">Seats: @table.Seats</p>
+
+                                    <!-- Occupancy Rate -->
+                                    <div class="mb-3">
+                                        <small class="text-muted">Occupancy Rate for @(((DateTime)ViewBag.SelectedDate).ToString("dd/MM/yyyy")):</small>
+                                        <div class="progress">
+                                            <div class="progress-bar @occupancyClass" 
+                                                 role="progressbar" 
+                                                 style="width: @(occupancy)%" 
+                                                 aria-valuenow="@occupancy" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                @Math.Round(occupancy, 1)%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <a href="@Url.Action("Tables", new { id = table.Id })" class="btn btn-sm btn-primary">
+                                        View Reservations
+                                    </a>
+                                    <form asp-action="DeleteTable" asp-controller="Admin" method="post" style="display: inline;" id="deleteForm_@table.Id">
+                                        <input type="hidden" name="id" value="@table.Id" />
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal(@table.Id)">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <!-- Selected Table's Reservations -->
+                @foreach (var table in Model.Where(t => t.Id == ViewBag.SelectedTableId))
+                {
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">Table #@table.Number</h4>
+                            <span class="badge @(table.IsReserved ? "bg-danger" : "bg-success")">
+                                @(table.IsReserved ? "Reserved" : "Available")
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <!-- User Reservations -->
+                            @if (ViewBag.UserReservations != null && ViewBag.UserReservations.Count > 0)
+                            {
+                                <h5 class="mb-3">User Reservations</h5>
+                                <div class="list-group mb-4">
+                                    @foreach (var reservation in ViewBag.UserReservations)
+                                    {
+                                        @if(reservation.Status != ReservationStatus.Outdated.ToString())
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">Date: @reservation.ReservationDate.ToShortDateString() @reservation.ReservationHour:00</h6>
+                                                        <p class="mb-1">Guests: @reservation.NumberOfGuests</p>
+                                                        <small>Status: @reservation.Status</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+
+                            <!-- Guest Reservations -->
+                            @if (ViewBag.GuestReservations != null && ViewBag.GuestReservations.Count > 0)
+                            {
+                                <h5 class="mb-3">Guest Reservations</h5>
+                                <div class="list-group">
+                                    @foreach (var reservation in ViewBag.GuestReservations)
+                                    {
+                                        @if(reservation.Status != ReservationStatus.Outdated.ToString())
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">@reservation.FullName</h6>
+                                                        <p class="mb-1">Date: @reservation.ReservationDate.ToShortDateString() @reservation.ReservationHour:00</p>
+                                                        <p class="mb-1">Guests: @reservation.NumberOfGuests</p>
+                                                        <small>Status: @reservation.Status</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Create Table Form -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Table</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateTable" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Table Number</label>
+                            <input type="number" name="Number" class="form-control" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Number of Seats</label>
+                            <input type="number" name="Seats" class="form-control" required min="1">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Table</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_DeleteConfirmationModal" />
+</div>
+
+
+@section Scripts {  
+    <script>  
+        function showDeleteModal(tableId) {  
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));  
+            document.getElementById('confirmDeleteBtn').onclick = function () {  
+                document.getElementById(`deleteForm_${tableId}`).submit();  
+            };  
+            modal.show();  
+        }  
+    </script>  
+}
+
+
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .list-group-item {
+        transition: background-color 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>

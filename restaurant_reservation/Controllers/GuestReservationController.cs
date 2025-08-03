@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -238,13 +239,7 @@ namespace restaurant_reservation.Controllers
                 .Include(t=> t.UserReservations)
                 .ToListAsync();
 
-            var workingHours = new[]
-            {
-                "12:00", "13:00", "14:00", "15:00", "16:00", 
-                "17:00", "18:00", "19:00", "20:00", "21:00"
-            };
-
-            var availableHours = workingHours.Where(hour =>
+            var availableHours = WorkingHours.Hours.Where(hour =>
             {
                 var timeSlot = DateTime.Parse(hour);
                 var reservationsAtTime = existingReservations
@@ -256,4 +251,5 @@ namespace restaurant_reservation.Controllers
             return availableHours;
         }
     }
+
 }

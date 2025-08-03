@@ -1,22 +1,191 @@
-html {
-  font-size: 14px;
-}
+/* Custom styles */
+:root {
+    /* Ana tema renkleri */
+    --primary-color: #2C3E50;         /* Koyu lacivert */
+    --secondary-color: #F0BB0C;       
+    --accent-color: #ECF0F1;          /* Açýk gri */
+    --text-color: #2C3E50;            /* Ana metin rengi */
+    --background-color: #F5F6FA;      /* Sayfa arkaplan rengi */
+    
+    /* Card özel renkleri */
+    --card-header-bg: #2C3E50;        /* Card header arkaplan rengi */
+    --card-header-text: #ECF0F1;      /* Card header metin rengi */
+    --card-border: #BDC3C7;           /* Card kenarlýk rengi */
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+    --font-primary: 'Open Sans', sans-serif;
+    --font-secondary: 'Roboto', sans-serif;
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+}
+
+.navbar {
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary-color) !important;
+}
+
+.navbar-brand:hover{
+    color: var(--secondary-color) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link {
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: var(--primary-color) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--secondary-color) !important;
+}
+
+.hero-section {
+    background-color: var(--background-color);
+    padding: 5rem 0;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Card stilleri */
+.card {
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: var(--card-header-bg);
+    color: var(--card-header-text);
+    border-bottom: 1px solid var(--card-border);
+    padding: 1rem 1.25rem;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    font-weight: 500;
+}
+
+/* Admin paneli için özel card header stili */
+.admin-card .card-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+/* Rezervasyon cardlarý için özel stil */
+.user-reservation-card .card-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Menü cardlarý için özel stil */
+.menu-card .card-header {
+    background: var(--primary-color);
+    color: white;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.form-control {
+    transition: border-color 0.2s ease;
+    border-radius: 0.5rem;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.btn {
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.card {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--card-border);
+}
+
+/* Menü kartlarý */
+.menu-card .card-header {
+    background: var(--primary-color);
+    color: white;
+}
+
+.menu-item-card {
+    background: var(--background-color);
+}
+
+/* Admin kartlarý */
+.admin-food-card .card-header,
+.admin-drink-card .card-header {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Rezervasyon kartlarý */
+.user-reservation-card .card-header {
+    background: var(--primary-color);
+    color: white;
+}
+
+.guest-reservation-card .card-header {
+    background: var(--accent-color);
+    color: var(--text-color);
+}
+
+/* Rezervasyon form kartý */
+.reservation-form-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.reservation-form-card .card-header {
+    background: var(--primary-color);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0;
+    }
 }

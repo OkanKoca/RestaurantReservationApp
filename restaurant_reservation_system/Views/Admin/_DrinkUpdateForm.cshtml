@@ -1,0 +1,63 @@
+﻿@using restaurant_reservation_system.Models.Dto
+@model DrinkDto
+
+<form id="updateForm" method="post" data-drink-id="@Model.Id">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Calories" class="form-label"></label>
+        <input asp-for="Calories" class="form-control" />
+        <span asp-validation-for="Calories" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Menu</label>
+        <select asp-for=MenuId class="form-select">
+            <option value="0" selected>Select a menu</option>
+            @foreach (var menu in ViewBag.Menus)
+            {
+                <option value="@menu.Id">@menu.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check">
+            <input asp-for="IsAlcoholic" type="checkbox" class="form-check-input" />
+            <label asp-for="IsAlcoholic" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="mb-3">
+        <div class="form-check">
+            <input asp-for="ContainsCaffeine" type="checkbox" class="form-check-input" />
+            <label asp-for="ContainsCaffeine" class="form-check-label"></label>
+        </div>
+    </div>
+    <div class="mb-3">
+        <div class="form-check">
+            <input asp-for="ContainsSugar" type="checkbox" class="form-check-input" />
+            <label asp-for="ContainsSugar" class="form-check-label"></label>
+        </div>
+    </div>
+    
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary" asp-controller="Admin" asp-action="UpdateDrink" >Save changes</button>
+    </div>
+</form>
+

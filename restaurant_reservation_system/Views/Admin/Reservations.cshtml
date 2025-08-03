@@ -17,8 +17,8 @@
         @foreach (var userReservation in Model.UserReservations)
         {
             <div class="col">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
+                <div class="card user-card-reservation h-100">
+                    <div class="card-header text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             @if (userReservation.Status == ReservationStatus.Confirmed.ToString())
                             {
@@ -94,8 +94,8 @@
         @foreach (var guestReservation in Model.GuestReservations)
         {
             <div class="col">
-                <div class="card h-100">
-                    <div class="card-header bg-black text-white">
+                <div class="card guest-reservation-card h-100">
+                    <div class="card-header text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             @if (guestReservation.Status == ReservationStatus.Confirmed.ToString())
                             {

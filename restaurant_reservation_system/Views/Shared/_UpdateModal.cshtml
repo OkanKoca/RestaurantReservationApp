@@ -1,0 +1,25 @@
+﻿
+<div class="modal" id="updateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateModalTitle">Update </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="updateModalBody">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showUpdateModal(entityType, id) {
+        const modal = $('#updateModal');
+        $('#entityType').text(entityType);
+        
+        $.get(`/Admin/Get${entityType}UpdateForm/${id}`, function(form) {
+            $('#updateFormContainer').html(form);
+        });
+    }
+</script>

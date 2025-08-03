@@ -9,13 +9,13 @@
 
 <div class="row justify-content-center">
     <div class="col-12 col-md-6">
-        <div class="card border-info rounded-3 shadow mx-auto">
+        <div class="card reservation-form-card rounded-3 shadow mx-auto">
                 <div class="card-body">
                     <h5 class="card-title text-center">Get A Very Quick Reservation!</h5>
-                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <p class="card-text">Experience an unforgettable dining journey by booking your table at our elegant restaurant.</p>
 
                     <form method="post" asp-action="BookReservation">
-                        <div asp-validation-summary="All" class="text-danger"></div>,
+                        <div asp-validation-summary="All" class="text-danger"></div>
                         <input asp-for="CustomerId" hidden />
                         <div class="mb-3">
                             <label asp-for="CustomerName" class="form-label"></label>

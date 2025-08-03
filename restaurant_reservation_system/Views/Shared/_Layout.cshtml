@@ -12,7 +12,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">restaurant_reservation_system</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">John Doe's Restaurant</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -27,12 +27,20 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="GuestReservation" asp-action="Create">Get A Reservation</a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Menus">Menus</a>
+                            </li> 
                         }
                         else
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="UserReservation" asp-action="Create">Get A Reservation</a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Menus">Menus</a>
+                            </li> 
 
                             @if(Context.Session.GetString("role") == "Admin")
                             {
@@ -41,10 +49,6 @@
                                 </li>
                             }
                         }
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Admin" asp-action="Menus">Menus</a>
-                        </li>
 
                     </ul>                    
                     <ul class="navbar-nav">
@@ -93,11 +97,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - restaurant_reservation_system - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

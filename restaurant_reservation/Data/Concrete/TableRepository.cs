@@ -1,4 +1,5 @@
-﻿using restaurant_reservation.Data.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
 
 namespace restaurant_reservation.Data.Concrete
@@ -24,12 +25,12 @@ namespace restaurant_reservation.Data.Concrete
 
         public IQueryable<Table> Tables()
         {
-            return _restaurantContext.Tables;
+            return _restaurantContext.Tables.Include(t=> t.UserReservations).Include(t=> t.GuestReservations);
         }
 
         public Table GetById(int id)
         {
-            var table = _restaurantContext.Tables.FirstOrDefault(t=> t.Id == id );
+            var table = _restaurantContext.Tables.Include(t=> t.UserReservations).Include(t => t.GuestReservations).FirstOrDefault(t => t.Id == id);
 
             if (table == null)
             {

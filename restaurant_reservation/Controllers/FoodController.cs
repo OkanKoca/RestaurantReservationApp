@@ -130,7 +130,7 @@ namespace restaurant_reservation.Controllers
             foodToUpdate.Calories = food.Calories;
             foodToUpdate.Price = food.Price;
             foodToUpdate.MenuId = food.MenuId;
-            foodToUpdate.Menu = _menuRepository.GetById(id) ?? null;
+            foodToUpdate.Menu = _menuRepository.GetById(food.MenuId) ?? null;
             foodToUpdate.IsVegan = food.IsVegan;
             foodToUpdate.ContainsGluten = food.ContainsGluten;
 

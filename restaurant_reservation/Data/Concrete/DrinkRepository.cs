@@ -12,13 +12,6 @@ namespace restaurant_reservation.Data.Concrete
         }
         public void Add(Drink drink)
         {
-            var menu = _restaurantContext.Menus.FirstOrDefault(m=> m.Id == drink.MenuId);
-
-            if (menu != null)
-            {
-                drink.Menu = menu;
-            }
-
             _restaurantContext.Drinks.Add(drink);
             _restaurantContext.SaveChanges();
         }

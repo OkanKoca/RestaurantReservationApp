@@ -8,6 +8,6 @@
         public bool IsReserved { get; set; } = false;
         public List<UserReservation>? UserReservations { get; set; }  = new List<UserReservation>(); 
         public List<GuestReservation>? GuestReservations { get; set; }  = new List<GuestReservation>();
-        public DateTime? ReservedUntil { get; set; } 
+        public DateTime? ReservedUntil { get; set; } //no need
     }
 }

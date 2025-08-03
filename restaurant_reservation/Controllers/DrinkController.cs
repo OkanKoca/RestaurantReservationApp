@@ -104,15 +104,15 @@ namespace restaurant_reservation.Controllers
 
             return CreatedAtAction(nameof(GetDrink), new { id = drink.Id }, new DrinkDto
             {
-                Id = drinkDto.Id,
-                Name = drinkDto.Name,
-                Description = drinkDto.Description,
-                Price= drinkDto.Price,
-                Calories= drinkDto.Calories,
-                MenuId= drinkDto.MenuId,
-                IsAlcoholic = drinkDto.IsAlcoholic,
-                ContainsCaffeine= drinkDto.ContainsCaffeine,
-                ContainsSugar = drinkDto.ContainsSugar
+                Id = drink.Id,
+                Name = drink.Name,
+                Description = drink.Description,
+                Price= drink.Price,
+                Calories= drink.Calories,
+                MenuId= drink.MenuId,
+                IsAlcoholic = drink.IsAlcoholic,
+                ContainsCaffeine= drink.ContainsCaffeine,
+                ContainsSugar = drink.ContainsSugar
             });
         }
 
@@ -133,7 +133,7 @@ namespace restaurant_reservation.Controllers
             drinkToUpdate.Calories = drink.Calories;
             drinkToUpdate.Price = drink.Price;
             drinkToUpdate.MenuId = drink.MenuId;
-            drinkToUpdate.Menu = _menuRepository.GetById(id) ?? null;
+            drinkToUpdate.Menu = _menuRepository.GetById(drink.MenuId) ?? null;
             drinkToUpdate.IsAlcoholic = drink.IsAlcoholic;
             drinkToUpdate.ContainsCaffeine = drink.ContainsCaffeine;
             drinkToUpdate.ContainsSugar = drink.ContainsSugar;
