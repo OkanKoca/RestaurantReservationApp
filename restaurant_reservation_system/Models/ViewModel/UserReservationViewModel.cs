@@ -1,4 +1,6 @@
-﻿namespace restaurant_reservation_system.Models.ViewModel
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace restaurant_reservation_system.Models.ViewModel
 {
     public class UserReservationViewModel
     {
@@ -11,6 +13,9 @@
         public DateTime ReservationDateLocal => ReservationDate.ToLocalTime();
         public int NumberOfGuests { get; set; }
         public string Status { get; set; } = "Pending";
+        [Required]
+        [Display(Name = "Reservation Hour")]
+        [FutureDateTime<UserReservationViewModel>]
         public string? ReservationHour { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime CreatedAtLocal => CreatedAt.ToLocalTime();

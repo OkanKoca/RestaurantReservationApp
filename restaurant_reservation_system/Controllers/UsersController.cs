@@ -109,12 +109,12 @@ namespace restaurant_reservation_system.Controllers
 
                     if (response.IsSuccessStatusCode)
                     {
-                        TempData["SuccessMessage"] = "Registraion successfully done! Please log in.";
+                        TempData["SuccessMessage"] = "Registration successfully done! Please log in.";
                         return RedirectToAction("Login");
                     }
                     else
                     {
-                        TempData["SuccessMessage"] = "Registraion failed! Please try again."; 
+                        TempData["SuccessMessage"] = "Registration failed! Please try again."; 
                         var errorContent = response.Content.ReadAsStringAsync().Result;
                         ModelState.AddModelError("", $"Registraion failed: {errorContent}");
                     }

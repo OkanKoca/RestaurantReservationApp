@@ -10,14 +10,23 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">User And Guest Reservations</h2>
 
+    <div class="mb-4">
+        <select id="statusFilter" class="form-select w-auto">
+            <option value="all">All Reservations</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Outdated">Outdated</option>
+        </select>
+    </div>
+
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         @{
             int i = 1;
         }
         @foreach (var userReservation in Model.UserReservations)
         {
-            <div class="col">
-                <div class="card user-card-reservation h-100">
+            <div class="col" data-reservation>
+                <div class="card user-reservation-card h-100" data-status="@userReservation.Status">
                     <div class="card-header text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             @if (userReservation.Status == ReservationStatus.Confirmed.ToString())
@@ -93,8 +102,8 @@
         }
         @foreach (var guestReservation in Model.GuestReservations)
         {
-            <div class="col">
-                <div class="card guest-reservation-card h-100">
+            <div class="col" data-reservation>
+                <div class="card guest-reservation-card h-100" data-status="@guestReservation.Status">
                     <div class="card-header text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             @if (guestReservation.Status == ReservationStatus.Confirmed.ToString())
@@ -196,6 +205,20 @@
             };
             modal.show();
         }
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const selectedStatus = this.value;
+            const reservationCards = document.querySelectorAll('[data-reservation]');
+
+            reservationCards.forEach(card => {
+                const cardStatus = card.querySelector('.card').getAttribute('data-status');
+                if (selectedStatus === 'all' || cardStatus === selectedStatus) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     </script>
 }
 

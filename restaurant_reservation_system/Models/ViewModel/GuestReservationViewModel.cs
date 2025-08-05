@@ -18,19 +18,29 @@ namespace restaurant_reservation_system.Models.ViewModel
         public DateTime ReservationDate { get; set; }
         [Required]
         [Display(Name = "Reservation Hour")]
-        [FutureDateTime]
+        [FutureDateTime<GuestReservationViewModel>]
         public string ReservationHour { get; set; }
     }
 
-    public class FutureDateTimeAttribute : ValidationAttribute {
+    public class FutureDateTimeAttribute<T> : ValidationAttribute where T : class
+    {
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            var model = (GuestReservationViewModel)validationContext.ObjectInstance;
+            var model = validationContext.ObjectInstance as T;
 
-            if (value is string selectedHour && model.ReservationDate != default)
+            if (model == null)
+                return new ValidationResult("Invalid model type");
+
+            var reservationDateProperty = typeof(T).GetProperty("ReservationDate");
+            if (reservationDateProperty == null)
+                return new ValidationResult("Model must have ReservationDate property");
+
+            var reservationDate = (DateTime)reservationDateProperty.GetValue(model)!;
+
+            if (value is string selectedHour && reservationDate != default)
             {
                 var selectedTime = TimeSpan.Parse(selectedHour);
-                var selectedDateTime = model.ReservationDate.Date.Add(selectedTime);
+                var selectedDateTime = reservationDate.Date.Add(selectedTime);
 
                 if (selectedDateTime <= DateTime.Now)
                 {
@@ -41,6 +51,6 @@ namespace restaurant_reservation_system.Models.ViewModel
             return ValidationResult.Success;
         }
     }
-         
+
 }
 
