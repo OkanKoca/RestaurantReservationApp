@@ -47,14 +47,14 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">@menu.Name</h4>
                     <div class="btn-group">
-                        <form asp-action="UpdateMenu" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@menu.Id" />
-                            <button class="btn btn-sm btn-outline-primary">Edit</button>
-                        </form>
 
-                        <form asp-action="DeleteMenu" asp-controller="Admin" method="post" class="d-inline">
+                        <form asp-action="DeleteMenu" asp-controller="Admin" method="post" class="d-inline" id="deleteForm_@menu.Id">
                             <input type="hidden" name="id" value="@menu.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            <button 
+                                type="button" 
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="showDeleteModal(@menu.Id)">Delete
+                        </button>
                         </form>
                     </div>
                 </div>
@@ -133,6 +133,18 @@
         }
     }
 </div>
+
+@section Scripts{
+    <script>
+        function showDeleteModal(menuId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            document.getElementById('confirmDeleteBtn').onclick = function () {
+                document.getElementById(`deleteForm_${menuId}`).submit();
+            };
+            modal.show();
+        }
+    </script>
+}
 
 <style>
     .card {

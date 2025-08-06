@@ -216,10 +216,61 @@ namespace restaurant_reservation_system.Controllers
         #endregion
 
         #region Users
-        public IActionResult Users()
+        public async Task<IActionResult> Users()
         {
-            return View();
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            List<AdminUserDto> users = new List<AdminUserDto>();
+
+            var response = await client.GetFromJsonAsync<List<AdminUserDto>>("Users");
+
+            if(response == null)
+            {
+                TempData["ErrorMessage"] = "Users could not be loaded.";
+                return View("Index", "Home");
+            }
+
+            users.AddRange(response);
+
+            return View(users);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangeUserRole(int id)
+        {
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.PutAsync($"Users/ChangeUserRole/{id}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "User is failed to change role.";
+                return RedirectToAction("Users");
+            }
+
+            TempData["SuccessMessage"] = "User role changed successfully.";
+            return RedirectToAction("Users");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteUser(int id)
+        {
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = client.DeleteAsync($"Users/{id}").Result;
+
+            if (!response.IsSuccessStatusCode) {
+                TempData["ErrorMessage"] = "User is failed to delete.";
+                return RedirectToAction("Users");
+            }
+
+            TempData["SuccessMessage"] = "User deleted successfully.";
+            return RedirectToAction("Users");
+        }
+
         #endregion
 
         #region  Foods

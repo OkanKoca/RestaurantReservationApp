@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Dto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
@@ -32,9 +34,32 @@ namespace restaurant_reservation.Controllers
         
         [HttpGet]
         [Authorize(Roles ="Admin")]
-        public List<AppUser> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            return _context.Users.ToList(); // This will load all users from the database
+            var users = await _context.Users
+            .Join(
+                _context.UserRoles,
+                user => user.Id,
+                userRole => userRole.UserId,
+                (user, userRole) => new { user, userRole }
+            )
+            .Join(
+                _context.Roles,
+                ur => ur.userRole.RoleId,
+                role => role.Id,
+                (ur, role) => new AdminUserDto
+                {
+                    Id = ur.user.Id,
+                    FirstName = ur.user.FirstName,
+                    LastName = ur.user.LastName,
+                    Email = ur.user.Email,
+                    Phone = ur.user.PhoneNumber,
+                    Role = role.Name ?? "Customer"
+                }
+            )
+            .ToListAsync();
+
+            return Ok(users);
         }
 
         // GET api/<UsersController>/5
@@ -129,25 +154,72 @@ namespace restaurant_reservation.Controllers
             return Ok(new { message = "Logged out successfully." });
         }
 
-        // PUT api/<UsersController>/5
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody] string value)
-        //{
-        //}
 
         // DELETE api/<UsersController>/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Id == id);
-
-            if(user == null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                return NotFound(new { Message = "User not found." });
+                var user = await _context.Users
+                    .Include(u => u.Reservations) 
+                    .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound(new { Message = "User not found." });
+                }
+
+                if (user.Reservations != null && user.Reservations.Any())
+                {
+                    _context.Reservations.RemoveRange(user.Reservations);
+                }
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Any())
+                {
+                    await _userManager.RemoveFromRolesAsync(user, userRoles);
+                }
+
+                await _userManager.DeleteAsync(user);
+
+                await transaction.CommitAsync();
+                return Ok(new { Message = "User and related data deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { Message = "An error occurred while deleting the user.", Error = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("ChangeUserRole/{id}")]
+        public async Task<IActionResult> AuthorizeUser(int id)
+        {
+            var user = await _userManager.Users.Where(u => u.Id == id).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound();
             }
 
-            _context.Users.Remove(user);
-            return Ok();
+            var isUserRoleCustomer = await _userManager.IsInRoleAsync(user, "Customer");
+
+            if (isUserRoleCustomer)
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Customer");
+                await _userManager.AddToRoleAsync(user, "Admin");
+            }
+            else
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Admin");
+                await _userManager.AddToRoleAsync(user, "Customer");
+            }
+
+            return Ok(new { Message = "User role changed successfully." });
         }
 
         private object GenerateJWT(AppUser user)
