@@ -1,30 +1,39 @@
-# 🍽️ Restaurant Reservation App
-RestaurantReservationApp, ASP.NET Core MVC ve ASP.NET Core API teknolojileri kullanılarak geliştirilmiş kapsamlı bir restoran rezervasyon sistemidir. Misafir kullanıcılar menüleri görüntüleyip rezervasyon yapabilirler. Üyeler ise "Customer" rolüyle kolayca rezervasyon oluşturabilir, rezervasyon durumlarını takip edip iptal edebilirler. Yönetici paneli ise "Admin" rolündeki kullanıcılar için menü yönetimi, rezervasyon onaylama, kullanıcı yönetimi gibi özellikler sunar.
+# Restaurant Reservation Application 🍽️
 
-# 🚀 Kullanılan Teknolojiler
-C# & ASP.NET Core MVC & ASP.NET Core API – Web uygulama framework’ü ve programlama dili
+A modern ASP.NET Core application for managing restaurant reservations, built with .NET 8.
 
-Entity Framework Core – ORM ile veritabanı işlemleri
+## Features 🚀
 
-ASP.NET Core Identity – Kullanıcı kimlik doğrulama ve yetkilendirme
+- **User Management 👤**
+  - User registration and authentication
+  - Role-based authorization (Admin / Customer)
+  - JWT Authentication & Profile management
 
-JWT Token – API güvenliği için token tabanlı kimlik doğrulama
+- **Reservation System 📅**
+  - Table booking for registered users
+  - Guest reservations (without account)
+  - Automatic reservation status updates (if it is outdated)
+  - Table availability tracking
 
-SQLite – Hafif ve gömülü veritabanı sistemi
+- **Admin Panel 🔧**
+  - Manage reservations, menus, and tables
+  - Update reservation status (e.g., Confirmed, Pending)
+  - Clear, user-friendly dashboard views
 
-Bootstrap 5 – Duyarlı (responsive) ve modern kullanıcı arayüzü
+- **Menu Management 🍕🍹**
+  - Organize food & drink items
+  - Categorize menus
+  - Display dietary information, pricing, etc.
 
-Razor Pages – Dinamik HTML oluşturma
+## Tech Stack 💻
 
-LINQ – Veri sorgulama
+- **Backend:**
+  - ASP.NET Core 8 (Razor Pages)
+  - Entity Framework Core 9
+  - SQLite database
+  - Identity Framework with JWT Bearer Authentication
 
-Dependency Injection – Servis ve bağımlılık yönetimi
-
-# 🎯 Temel Özellikler
-Misafir kullanıcılar için rezervasyon oluşturma ve menü görüntüleme
-
-"Customer" rolündeki üyelerin rezervasyon yapması, iptal etmesi ve onay durumlarını takip etmesi
-
-"Admin" rolündeki kullanıcıların menü yönetimi (yemek/ içecek ekleme, düzenleme, silme), rezervasyonları onaylama, silme, kullanıcı yönetimi (rol değiştirme, kullanıcı silme)
-
-JWT ile API güvenliği
+- **Frontend:**
+  - Razor Pages
+  - Bootstrap 5 & Font Awesome
+  - HTML5, CSS3, and JavaScript
