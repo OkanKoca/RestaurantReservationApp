@@ -54,7 +54,14 @@
                         </div>
 
                         <br />
-                        <button href="#" class="btn-outline-primary btn-sm">Cancel</button>
+                        <form asp-action="CancelReservation" asp-controller="UserReservation" id="cancelForm_@reservation.Id">
+                            <input hidden name="id" value="@reservation.Id"/>
+                            <button 
+                                type="button" 
+                                class="btn-outline-primary btn-sm"
+                                    onclick="showDeleteModal(@reservation.Id)">Cancel
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -62,8 +69,21 @@
             i++;
         }
     </div>
+    <partial name="_DeleteConfirmationModal" />
+
 </div>
 
+@section Scripts {
+    <script>
+        function showDeleteModal(reservationId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            document.getElementById('confirmDeleteBtn').onclick = function () {
+                document.getElementById(`cancelForm_${reservationId}`).submit();
+            };
+            modal.show();
+        }
+    </script>
+}
 
 <style >
     .card {

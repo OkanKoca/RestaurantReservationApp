@@ -5,6 +5,7 @@ namespace restaurant_reservation_system.Models.ViewModel
     public class MyReservationsViewModel
     {
         public int Id { get; set; }
+        public int CustomerId { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime ReservationDate { get; set; }
         public DateTime ReservationDateLocal => ReservationDate.ToLocalTime();

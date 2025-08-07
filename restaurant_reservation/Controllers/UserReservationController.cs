@@ -230,6 +230,7 @@ namespace restaurant_reservation.Controllers
             {
                 var reservationDto = new UserReservationDto
                 {
+                    Id = reservation.Id,
                     CustomerId = reservation.Customer.Id,
                     NumberOfGuests = reservation.NumberOfGuests,
                     ReservationDate = reservation.ReservationDate,
@@ -251,6 +252,35 @@ namespace restaurant_reservation.Controllers
                 user.PhoneNumber,
                 reservations
             });
+        }
+
+        [Authorize]
+        [HttpDelete("myreservations/{id}")]
+        public async Task<IActionResult> CancelReservation(int id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return NotFound();
+
+            var reservationToCancel = _userReservationRepository.UserReservations()
+            .Where(r => r.Customer.Id == int.Parse(userId))
+            .Include(r => r.Table)
+            .FirstOrDefault(r => r.Id == id);
+
+            if (reservationToCancel == null)
+            {
+                return NotFound();
+            }
+
+            _userReservationRepository.Delete(id);
+
+            return NoContent();
         }
 
         // DELETE api/<UserReservationController>/5

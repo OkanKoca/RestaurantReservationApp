@@ -87,6 +87,24 @@ namespace restaurant_reservation_system.Controllers
             return View("Create", model);
         }
 
+        [HttpPost]
+        public IActionResult CancelReservation(int id)
+        {
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = client.DeleteAsync($"UserReservation/MyReservations/{id}");
+
+            if (response.Result.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Your reservation is canceled successfully!";
+                return RedirectToAction("MyReservations");
+            }
+
+            TempData["ErrorMessage"] = "Your reservation is failed to cancel.";
+            return RedirectToAction("MyReservations");
+        }
+
         public async Task<IActionResult> MyReservations()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("token")))
@@ -108,7 +126,8 @@ namespace restaurant_reservation_system.Controllers
                 {
                     reservations.Add(new MyReservationsViewModel
                     {
-                        Id = reservation.CustomerId,
+                        Id = reservation.Id,
+                        CustomerId = reservation.CustomerId,
                         Status = reservation.Status,
                         ReservationDate = reservation.ReservationDate,
                         ReservationHour = reservation.ReservationDate.Hour.ToString(),

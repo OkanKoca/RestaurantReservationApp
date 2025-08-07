@@ -4,6 +4,7 @@ namespace restaurant_reservation_system.Models.Dto
 {
     public class UserReservationDto
     {
+        public int Id { get; set; }
         public int CustomerId { get; set; }
         public required DateTime ReservationDate { get; set; }
         public required int NumberOfGuests { get; set; }
