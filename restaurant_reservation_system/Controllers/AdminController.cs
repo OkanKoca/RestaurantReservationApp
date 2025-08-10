@@ -546,7 +546,8 @@ namespace restaurant_reservation_system.Controllers
             var token = HttpContext.Session.GetString("token");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-            var menus = client.GetFromJsonAsync<List<MenuDto>>("Menu").Result ?? new List<MenuDto>();
+            var menuViewModel = new MenuViewModel();
+            menuViewModel.Menus = client.GetFromJsonAsync<List<MenuDto>>("Menu").Result ?? new List<MenuDto>();
 
             if (id.HasValue)
             {
@@ -556,15 +557,35 @@ namespace restaurant_reservation_system.Controllers
                 ViewBag.Drinks = drinkResponse;
                 ViewBag.Foods = foodResponse;
                 ViewBag.SelectedMenuId = id;
-            }
+            } 
 
-            return View(menus);
+            return View(menuViewModel);
         }
 
         [HttpPost]
-        public IActionResult CreateMenu()
+        public async Task<IActionResult> CreateMenu([Bind(Prefix = "NewMenu")] MenuDto menuDto)
         {
-            return View();
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction("Menus");
+            }
+
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.PostAsJsonAsync("Menu", menuDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Menu created successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to create menu.";
+            }
+
+            return RedirectToAction("Menus");
         }
 
         [HttpPost]
