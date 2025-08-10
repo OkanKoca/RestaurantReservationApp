@@ -70,6 +70,6 @@ A modern ASP.NET Core application for managing restaurant reservations, built wi
 <img src="screenshots/foods.png" alt="Admin foods" width="800"/>
 <img src="screenshots/drinks.png" alt="Admin drinks" width="800"/>
 <img src="screenshots/adminmenus.png" alt="Admin menus" width="800"/>
-<p>Admin can check a table's occupancy and add, delete table.</p>
+<p>Admin can check a table's occupancy, reservations and add, delete table.</p>
 <img src="screenshots/tablesandpoccupancies.png" alt="Admin tables and table occupancies" width="800"/>
 
