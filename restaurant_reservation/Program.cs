@@ -17,6 +17,12 @@ builder.Services.AddDbContext<RestaurantContext>(options =>
 
 builder.Services.AddSignalR();
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "RestaurantReservation_";
+});
+
 builder.Services.AddIdentity<AppUser, AppRole>()
    .AddEntityFrameworkStores<RestaurantContext>(); // This line requires the above using directive  
 builder.Services.Configure<IdentityOptions>(options =>

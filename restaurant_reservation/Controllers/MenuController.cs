@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation_api.Dto;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -18,17 +22,28 @@ namespace restaurant_reservation.Controllers
         private readonly IMenuRepository _menuRepository;
         private readonly IDrinkRepository _drinkRepository;
         private readonly IFoodRepository _foodRepository;
-        public MenuController(IMenuRepository menuRepository, IDrinkRepository drinkRepository, IFoodRepository foodRepository)
+        private readonly IDistributedCache _distributedCache;
+        public MenuController(IMenuRepository menuRepository, IDrinkRepository drinkRepository, IFoodRepository foodRepository, IDistributedCache distributedCache)
         {
             _menuRepository = menuRepository;
             _drinkRepository = drinkRepository;
             _foodRepository = foodRepository;
+            _distributedCache = distributedCache;
         }
 
         [HttpGet]
-        public List<MenuDto> GetAllMenus()
+        public async Task<IActionResult> GetAllMenus()
         {
-            return _menuRepository.Menus()
+            var cacheKey = "menu_list";
+            var cachedData = await _distributedCache.GetStringAsync(cacheKey);
+
+            if(cachedData != null)
+            {
+                var menus = JsonSerializer.Deserialize<List<MenuDto>>(cachedData);
+                return Ok(menus);
+            }
+
+            var menuList = await _menuRepository.Menus()
             .Select(m => new MenuDto
             {
                 Id = m.Id,
@@ -37,7 +52,17 @@ namespace restaurant_reservation.Controllers
                 DrinkIds = m.Drinks.Select(d => d.Id).ToList(),
                 FoodIds = m.Foods.Select(f => f.Id).ToList()
             })
-            .ToList();
+            .ToListAsync();
+
+            await _distributedCache.SetStringAsync(cacheKey,
+                JsonSerializer.Serialize(menuList),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12)
+                });
+
+            return Ok(menuList);
+
         }
 
         // GET api/<MenuController>/5
@@ -103,7 +128,7 @@ namespace restaurant_reservation.Controllers
         // POST api/<MenuController>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public IActionResult Post(MenuDto menuDto)
+        public async Task<IActionResult> Post(MenuDto menuDto)
         {
             if (menuDto == null || !ModelState.IsValid)
             {
@@ -122,6 +147,8 @@ namespace restaurant_reservation.Controllers
             };
 
             _menuRepository.Add(menu);
+
+            await _distributedCache.RemoveAsync("menu_list");
 
             return CreatedAtAction(nameof(GetMenu), new { id = menu.Id }, menu);
         }
