@@ -54,11 +54,21 @@ namespace restaurant_reservation.Controllers
 
         [HttpGet("{id}/UserReservations")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<UserReservationDto>> GetTableUserReservations(int id)
+        public ActionResult<List<UserReservationDto>> GetTableUserReservations(int id, [FromQuery] DateTime? dateTime = null)
         {
-            var userReservations = _tableRepository.GetById(id).UserReservations.Select(r=> new UserReservationDto
+            var table = _tableRepository.GetById(id);
+            if (table == null) return NotFound();
+
+            var query = table.UserReservations.AsQueryable();
+            if (dateTime.HasValue)
             {
-                CustomerId = 0, // this is not needed for now, I assign it 0 because I use UserReservationDto
+                var d = dateTime.Value.Date;
+                query = query.Where(r => r.ReservationDate.Date == d);
+            }
+
+            var userReservations = query.Select(r=> new UserReservationDto
+            {
+                CustomerId =0, // this is not needed for now, I assign it0 because I use UserReservationDto
                 ReservationDate = r.ReservationDate,
                 NumberOfGuests = r.NumberOfGuests,
                 ReservationHour = r.ReservationDate.Hour.ToString(),
@@ -76,9 +86,19 @@ namespace restaurant_reservation.Controllers
 
         [HttpGet("{id}/GuestReservations")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<AdminGuestReservationTableDto>> GetTableGuestReservations(int id)
+        public ActionResult<List<AdminGuestReservationTableDto>> GetTableGuestReservations(int id, [FromQuery] DateTime? dateTime = null)
         {
-            var guestReservations = _tableRepository.GetById(id).GuestReservations.Select(g=> new AdminGuestReservationTableDto { 
+            var table = _tableRepository.GetById(id);
+            if (table == null) return NotFound();
+
+            var query = table.GuestReservations.AsQueryable();
+            if (dateTime.HasValue)
+            {
+                var d = dateTime.Value.Date;
+                query = query.Where(g => g.ReservationDate.Date == d);
+            }
+
+            var guestReservations = query.Select(g=> new AdminGuestReservationTableDto { 
                 Id = g.Id,
                 FullName = g.FullName,
                 Email = g.Email,
@@ -110,7 +130,7 @@ namespace restaurant_reservation.Controllers
 
             int countOfReservationsAtDate = userReservations.Count + guestReservations.Count; 
 
-            var rate = ((double)countOfReservationsAtDate / countOfWorkingHours) * 100;
+            var rate = ((double)countOfReservationsAtDate / countOfWorkingHours) *100;
 
             return new JsonResult(rate);
         }

@@ -64,7 +64,7 @@
                                         </div>
                                     </div>
 
-                                    <a href="@Url.Action("Tables", new { id = table.Id })" class="btn btn-sm btn-primary">
+                                    <a href="@Url.Action("Tables", new { id = table.Id, date = ViewBag.SelectedDate })" class="btn btn-sm btn-primary">
                                         View Reservations
                                     </a>
                                     <form asp-action="DeleteTable" asp-controller="Admin" method="post" style="display: inline;" id="deleteForm_@table.Id">

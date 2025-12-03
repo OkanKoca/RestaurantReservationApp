@@ -663,17 +663,16 @@ namespace restaurant_reservation_system.Controllers
                         ViewData[$"TableOccupancy_{table.Id}"] = occupancyRate;
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    // Hata durumunda varsayılan değer 0 olarak kalacak
-                    ViewData[$"TableOccupancy_{table.Id}"] = 0;
+                    ViewData[$"TableOccupancy_{table.Id}"] =0;
                 }
             }
 
             if (id.HasValue)
             {
-                var userReservations = client.GetFromJsonAsync<List<UserReservationDto>>($"Table/{id}/UserReservations").Result ?? new List<UserReservationDto>();
-                var guestReservations = client.GetFromJsonAsync<List<AdminGuestReservationDto>>($"Table/{id}/GuestReservations").Result ?? new List<AdminGuestReservationDto>();
+                var userReservations = client.GetFromJsonAsync<List<UserReservationDto>>($"Table/{id}/UserReservations?dateTime={selectedDate:yyyy-MM-dd}").Result ?? new List<UserReservationDto>();
+                var guestReservations = client.GetFromJsonAsync<List<AdminGuestReservationDto>>($"Table/{id}/GuestReservations?dateTime={selectedDate:yyyy-MM-dd}").Result ?? new List<AdminGuestReservationDto>();
 
                 ViewBag.UserReservations = userReservations;
                 ViewBag.GuestReservations = guestReservations;
