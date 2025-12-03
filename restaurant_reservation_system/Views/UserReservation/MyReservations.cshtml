@@ -56,11 +56,15 @@
                         <br />
                         <form asp-action="CancelReservation" asp-controller="UserReservation" id="cancelForm_@reservation.Id">
                             <input hidden name="id" value="@reservation.Id"/>
-                            <button 
-                                type="button" 
-                                class="btn-outline-primary btn-sm"
-                                    onclick="showDeleteModal(@reservation.Id)">Cancel
-                            </button>
+                            @if (reservation.Status != ReservationStatus.Outdated.ToString())
+                            {
+                                <button type="button"
+                                        class="btn-outline-primary btn-sm"
+                                        onclick="showDeleteModal(@reservation.Id)">
+                                    Cancel
+                                </button>
+                            }
+                            
                         </form>
                     </div>
                 </div>

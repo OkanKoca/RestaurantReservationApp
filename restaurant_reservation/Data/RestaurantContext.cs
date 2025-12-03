@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using restaurant_reservation.Models;
 using System.Reflection.Emit;
 
-namespace restaurant_reservation
+namespace restaurant_reservation_api.Data
 {
     public class RestaurantContext : IdentityDbContext<AppUser, AppRole, int>
     {

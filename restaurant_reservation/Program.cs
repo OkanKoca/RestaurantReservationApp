@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using restaurant_reservation;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Data;
+using restaurant_reservation_api.Hubs;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<RestaurantContext>(options => 
     options.UseSqlite("Data Source=restaurant_reservation"));
+
+builder.Services.AddSignalR();
 
 builder.Services.AddIdentity<AppUser, AppRole>()
    .AddEntityFrameworkStores<RestaurantContext>(); // This line requires the above using directive  
@@ -55,11 +58,11 @@ builder.Services.AddSwaggerGen();
 // CORS politikasýný ekle
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder => builder
-            .AllowAnyOrigin()
+    options.AddPolicy("SignalR",
+        builder => builder.WithOrigins("https://localhost:7100")
+            .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowCredentials());
 });
 
 builder.Services.AddScoped<ITableRepository, TableRepository>();
@@ -81,10 +84,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // CORS politikasýný etkinleþtir
-app.UseCors("AllowAll");
+app.UseCors("SignalR");
 
 app.UseAuthorization();
 
+
 app.MapControllers();
+app.MapHub<AdminHub>("/adminHub");
 
 app.Run();

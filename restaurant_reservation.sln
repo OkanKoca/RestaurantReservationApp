@@ -5,10 +5,6 @@ VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "restaurant_reservation_api", "restaurant_reservation\restaurant_reservation_api.csproj", "{4C330C18-E4CC-4DD5-A74C-22303942F60F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlogApp", "..\..\ASP.NET PROJELER\BlogApp\BlogApp\BlogApp.csproj", "{DFF283CD-428B-9607-59F3-065EA541341A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API_App", "..\..\ASP.NET PROJELER\API_App\API_App\API_App.csproj", "{F06D3767-F1EC-D4A6-9F5D-86D5A62ED252}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "restaurant_reservation_system", "restaurant_reservation_system\restaurant_reservation_system.csproj", "{E354928E-D1EB-4C7C-B73E-710E5FC15963}"
 EndProject
 Global
@@ -21,14 +17,6 @@ Global
 		{4C330C18-E4CC-4DD5-A74C-22303942F60F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C330C18-E4CC-4DD5-A74C-22303942F60F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C330C18-E4CC-4DD5-A74C-22303942F60F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DFF283CD-428B-9607-59F3-065EA541341A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DFF283CD-428B-9607-59F3-065EA541341A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DFF283CD-428B-9607-59F3-065EA541341A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DFF283CD-428B-9607-59F3-065EA541341A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F06D3767-F1EC-D4A6-9F5D-86D5A62ED252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F06D3767-F1EC-D4A6-9F5D-86D5A62ED252}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F06D3767-F1EC-D4A6-9F5D-86D5A62ED252}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F06D3767-F1EC-D4A6-9F5D-86D5A62ED252}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E354928E-D1EB-4C7C-B73E-710E5FC15963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E354928E-D1EB-4C7C-B73E-710E5FC15963}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E354928E-D1EB-4C7C-B73E-710E5FC15963}.Release|Any CPU.ActiveCfg = Release|Any CPU

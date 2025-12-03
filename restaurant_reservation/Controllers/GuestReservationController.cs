@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Hubs;
 using restaurant_reservation_api.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -17,11 +20,13 @@ namespace restaurant_reservation.Controllers
         private readonly IGuestReservationRepository _guestReservationRepository;
         private readonly ITableRepository _tableRepository;
         private readonly IUserReservationRepository _userReservationRepository;
-        public GuestReservationController(IGuestReservationRepository guestReservationRepository, ITableRepository tableRepository, IUserReservationRepository userReservationRepository)
+        private readonly IHubContext<AdminHub> _hubContext;
+        public GuestReservationController(IGuestReservationRepository guestReservationRepository, ITableRepository tableRepository, IUserReservationRepository userReservationRepository, IHubContext<AdminHub> hubContext)
         {
             _guestReservationRepository = guestReservationRepository;
             _tableRepository = tableRepository;
             _userReservationRepository = userReservationRepository;
+            _hubContext = hubContext;
         }
 
         // GET: api/<GuestReservationController>
@@ -120,6 +125,14 @@ namespace restaurant_reservation.Controllers
 
             _guestReservationRepository.Add(guestReservation);
 
+            await _hubContext.Clients.All.SendAsync("NewReservation", new
+            {
+                ReservationTable = table.Number,
+                CustomerName = guestReservation.FullName,
+                ReservationDate = guestReservation.ReservationDate.ToShortDateString(),
+                ReservationHour = guestReservation.ReservationDate.ToShortTimeString()
+            });
+
             return CreatedAtAction(nameof(GetGuestReservation), new { id = guestReservation.Id }, guestReservationDto);
         }
 
@@ -158,7 +171,7 @@ namespace restaurant_reservation.Controllers
         // DELETE api/<GuestReservationController>/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var guestReservation = _guestReservationRepository.GetById(id);
 
@@ -167,6 +180,14 @@ namespace restaurant_reservation.Controllers
                 return NotFound($"Guest reservation with ID {id} not found.");
             }
             _guestReservationRepository.Delete(id);
+
+            await _hubContext.Clients.All.SendAsync("ReservationCanceled", new
+            {
+                ReservationTable = _tableRepository.GetById(guestReservation.TableId).Number,
+                CustomerName = guestReservation.FullName,
+                ReservationDate = guestReservation.ReservationDate.ToShortDateString(),
+                ReservationHour = guestReservation.ReservationDate.ToShortTimeString()
+            });
 
             return NoContent();
         }

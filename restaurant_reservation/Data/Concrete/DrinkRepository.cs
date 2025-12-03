@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Data;
 
 namespace restaurant_reservation.Data.Concrete
 {

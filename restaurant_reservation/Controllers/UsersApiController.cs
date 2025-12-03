@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation_api.Data;
 using restaurant_reservation_api.Dto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata.Ecma335;

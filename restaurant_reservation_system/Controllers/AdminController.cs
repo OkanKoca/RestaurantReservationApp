@@ -20,9 +20,38 @@ namespace restaurant_reservation_system.Controllers
             };
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var token = HttpContext.Session.GetString("token");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var dashboard = new AdminDashboardViewModel();
+
+            try
+            {
+                var uReservations = await client.GetFromJsonAsync<List<AdminUserReservationDto>>("UserReservation") ?? new List<AdminUserReservationDto>();
+                var gReservations = await client.GetFromJsonAsync<List<AdminGuestReservationDto>>("GuestReservation") ?? new List<AdminGuestReservationDto>();
+                var users = await client.GetFromJsonAsync<List<AdminUserDto>>("Users") ?? new List<AdminUserDto>();
+
+                var today = DateTime.Today;
+                var todayUser = uReservations.Count(r => r.ReservationDate.Date == today);
+                var todayGuest = gReservations.Count(r => r.ReservationDate.Date == today);
+
+                dashboard.TodayUserReservations = todayUser;
+                dashboard.TodayGuestReservations = todayGuest;
+                dashboard.TodayTotalReservations = todayUser + todayGuest;
+                dashboard.TotalUsers = users.Count;
+                dashboard.PendingReservations = uReservations.Count(r => string.Equals(r.Status, ReservationStatus.Pending.ToString(), StringComparison.OrdinalIgnoreCase)) +
+                                              gReservations.Count(r => string.Equals(r.Status, ReservationStatus.Pending.ToString(), StringComparison.OrdinalIgnoreCase));
+                dashboard.ConfirmedReservations = uReservations.Count(r => string.Equals(r.Status, ReservationStatus.Confirmed.ToString(), StringComparison.OrdinalIgnoreCase)) +
+                                                  gReservations.Count(r => string.Equals(r.Status, ReservationStatus.Confirmed.ToString(), StringComparison.OrdinalIgnoreCase));
+            }
+            catch
+            {
+                TempData["ErrorMessage"] = "Dashboard verileri yüklenemedi.";
+            }
+
+            return View(dashboard);
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)

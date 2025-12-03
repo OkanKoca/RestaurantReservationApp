@@ -1,1 +1,67 @@
-﻿<h5>This is an Admin Panel. </h5>
+﻿@model restaurant_reservation_system.Models.ViewModel.AdminDashboardViewModel
+
+<div class="container mt-4">
+    <h4>Admin Dashboard</h4>
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Total Reservations Today</h6>
+                    <h3 id="todayTotal">@Model.TodayTotalReservations</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6>User Reservations Today</h6>
+                    <h3 id="todayUser">@Model.TodayUserReservations</h3>
+                </div>
+            </div>  
+        </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6>Guest Reservations Today</h6>
+                <h3 id="todayGuest">@Model.TodayGuestReservations</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6>Total Users</h6>
+                <h3 id="totalUsers">@Model.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6>Pending Reservations</h6>
+                <h3 id="pending">@Model.PendingReservations</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6>Confirmed Reservations</h6>
+                <h3 id="confirmed">@Model.ConfirmedReservations</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if(TempData["ErrorMessage"] != null)
+{
+<div class="alert alert-danger mt-3">@TempData["ErrorMessage"]</div>
+}
+
+</div>
+
