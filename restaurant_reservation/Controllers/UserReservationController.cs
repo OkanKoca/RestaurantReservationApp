@@ -305,6 +305,5 @@ namespace restaurant_reservation.Controllers
 
             return NoContent();
         }
-        }
     }
 }

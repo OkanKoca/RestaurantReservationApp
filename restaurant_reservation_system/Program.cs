@@ -1,10 +1,13 @@
-
+using restaurant_reservation_system.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
+
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 //// Add Cookie Authentication
 //builder.Services.AddAuthentication(options => 
