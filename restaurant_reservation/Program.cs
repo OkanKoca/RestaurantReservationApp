@@ -7,6 +7,7 @@ using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Models;
 using restaurant_reservation_api.Data;
 using restaurant_reservation_api.Hubs;
+using restaurant_reservation_api.Mapping;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<RestaurantContext>(options =>
     options.UseSqlite("Data Source=restaurant_reservation"));
 
 builder.Services.AddSignalR();
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

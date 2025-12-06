@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -25,48 +26,42 @@ namespace restaurant_reservation.Controllers
         private readonly ITableRepository _tableRepository;
         private readonly UserManager<AppUser> _userManager;
         private readonly IHubContext<AdminHub> _hubContext;
-        public UserReservationController(IUserReservationRepository userReservationRepository, ITableRepository tableRepository, UserManager<AppUser> userManager, IHubContext<AdminHub> hubContext)
+        private readonly IMapper _mapper;
+        public UserReservationController(IUserReservationRepository userReservationRepository,
+            ITableRepository tableRepository, UserManager<AppUser> userManager, IHubContext<AdminHub> hubContext,
+            IMapper mapper)
         {
             _userReservationRepository = userReservationRepository;
             _tableRepository = tableRepository;
             _userManager = userManager;
             _hubContext = hubContext;
+            _mapper = mapper;
         }
         // GET: api/<UserReservationController>
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public List<AdminUserReservationDto> GetAllUserReservations()
         {
-            List <AdminUserReservationDto> userReservations = new List<AdminUserReservationDto>();
+            List<AdminUserReservationDto> userReservations = new List<AdminUserReservationDto>();
 
             foreach (var reservation in _userReservationRepository.UserReservations().ToList())
             {
-                if(reservation.Customer == null)
+                if (reservation.Customer == null)
                 {
                     continue;
                 }
 
-                if(isOutdated(reservation.Id))
+                if (isOutdated(reservation.Id))
                 {
                     reservation.Status = ReservationStatus.Outdated.ToString();
                     _userReservationRepository.Update(reservation);
                 }
 
-                userReservations.Add(new AdminUserReservationDto
-                {
-                    Id = reservation.Id,
-                    CustomerId = reservation.Customer.Id,
-                    CustomerName = $"{reservation.Customer.FirstName} {reservation.Customer.LastName}",
-                    CustomerEmail = reservation.Customer.Email,
-                    CustomerPhone = reservation.Customer.PhoneNumber,
-                    NumberOfGuests = reservation.NumberOfGuests,
-                    ReservationDate = reservation.ReservationDate,
-                    ReservationHour = reservation.ReservationDate.Hour.ToString(),
-                    Status = reservation.Status.ToString(),
-                    CreatedAt = reservation.CreatedAt
-                });
+                var reservationDto = _mapper.Map<AdminUserReservationDto>(reservation);
+
+                userReservations.Add(reservationDto);
             }
-            
+
             return userReservations;
         }
         private bool isOutdated(int id)
@@ -87,7 +82,7 @@ namespace restaurant_reservation.Controllers
         }
 
         // GET api/<UserReservationController>/5
-        [Authorize(Roles = "Admin")]   
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public UserReservation GetUserReservation(int id)
         {
@@ -132,7 +127,7 @@ namespace restaurant_reservation.Controllers
             var table = available_tables.First();
 
             DateTime requestedDateWithHour = new DateTime(requestedDate.Year, requestedDate.Month, requestedDate.Day, requestedHour, 0, 0);
-            
+
             var customer = await _userManager.FindByIdAsync(userReservationDto.CustomerId.ToString());
 
             var userReservation = new UserReservation
@@ -151,7 +146,7 @@ namespace restaurant_reservation.Controllers
             {
                 ReservationTable = table.Number,
                 CustomerName = $"{userReservation.Customer.FirstName} {userReservation.Customer.LastName}",
-                ReservationDate = userReservation.ReservationDate.ToShortDateString(),  
+                ReservationDate = userReservation.ReservationDate.ToShortDateString(),
                 ReservationHour = userReservation.ReservationDate.ToShortTimeString()
             });
 
@@ -178,8 +173,6 @@ namespace restaurant_reservation.Controllers
             existingReservation.NumberOfGuests = userReservationDto.NumberOfGuests;
             existingReservation.ReservationDate = userReservationDto.ReservationDate;
             existingReservation.ReservationDate = new DateTime(existingReservation.ReservationDate.Year, existingReservation.ReservationDate.Month, existingReservation.ReservationDate.Day, int.Parse(userReservationDto.ReservationHour.Split(':')[0]), 0, 0);
-            //existingReservation.TableId = userReservation.TableId;
-            //existingReservation.Table = _tableRepository.GetById(userReservation.TableId);
             existingReservation.Status = userReservationDto.Status;
 
             existingReservation.Table.UserReservations.Remove(existingReservation);
@@ -203,11 +196,11 @@ namespace restaurant_reservation.Controllers
                 return NotFound($"User reservation with ID {id} not found.");
             }
 
-            if(existingReservation.Status == ReservationStatus.Confirmed.ToString())
+            if (existingReservation.Status == ReservationStatus.Confirmed.ToString())
             {
                 existingReservation.Status = ReservationStatus.Pending.ToString();
-            } 
-            else if(existingReservation.Status == ReservationStatus.Pending.ToString())
+            }
+            else if (existingReservation.Status == ReservationStatus.Pending.ToString())
             {
                 existingReservation.Status = ReservationStatus.Confirmed.ToString();
             }
@@ -237,24 +230,8 @@ namespace restaurant_reservation.Controllers
                 .Include(r => r.Table)
                 .ToListAsync();
 
-            List<UserReservationDto> reservations = new List<UserReservationDto>();
+            var reservations = _mapper.Map<List<UserReservationDto>>(reservationsDb);
 
-            foreach(var reservation in reservationsDb)
-            {
-                var reservationDto = new UserReservationDto
-                {
-                    Id = reservation.Id,
-                    CustomerId = reservation.Customer.Id,
-                    NumberOfGuests = reservation.NumberOfGuests,
-                    ReservationDate = reservation.ReservationDate,
-                    ReservationHour = reservation.ReservationDate.Hour.ToString(),
-                    Status = reservation.Status.ToString(),
-                    CreatedAt = reservation.CreatedAt
-                };
-
-                reservations.Add(reservationDto);
-            }
-            
 
             return Ok(new
             {
@@ -327,6 +304,7 @@ namespace restaurant_reservation.Controllers
             });
 
             return NoContent();
+        }
         }
     }
 }

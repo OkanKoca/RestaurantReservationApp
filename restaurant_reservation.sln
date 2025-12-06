@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "restaurant_reservation_api", "restaurant_reservation\restaurant_reservation_api.csproj", "{4C330C18-E4CC-4DD5-A74C-22303942F60F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "restaurant_reservation_mvc", "restaurant_reservation_system\restaurant_reservation_mvc.csproj", "{E354928E-D1EB-4C7C-B73E-710E5FC15963}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "restaurant_reservation_system", "restaurant_reservation_system\restaurant_reservation_system.csproj", "{E354928E-D1EB-4C7C-B73E-710E5FC15963}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
