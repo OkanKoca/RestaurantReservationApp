@@ -6,6 +6,7 @@ using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Models;
 using restaurant_reservation_api.Dto;
+using AutoMapper;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -17,30 +18,23 @@ namespace restaurant_reservation.Controllers
     {
         private readonly IDrinkRepository _drinkRepository;
         private readonly IMenuRepository _menuRepository;
-        public DrinkController(IDrinkRepository drinkRepository, IMenuRepository menuRepository)
+        private readonly IMapper _mapper;
+
+        public DrinkController(IDrinkRepository drinkRepository, IMenuRepository menuRepository, IMapper mapper)
         {
             _drinkRepository = drinkRepository;
             _menuRepository = menuRepository;
+            _mapper = mapper;
         }
-        
+
         [HttpGet]
         public ActionResult<List<DrinkDto>> GetAllDrinks()
         {
-            var drinks = _drinkRepository.Drinks().Include(d => d.Menu)
-                .Select(d => new DrinkDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    Description = d.Description,
-                    Calories = d.Calories,
-                    Price = d.Price,
-                    MenuId = d.MenuId,
-                    IsAlcoholic = d.IsAlcoholic,
-                    ContainsCaffeine = d.ContainsCaffeine,
-                    ContainsSugar = d.ContainsSugar
-                }).ToList();
+            var drinks = _drinkRepository.Drinks()
+                .Include(d => d.Menu)
+                .ToList();
 
-            return Ok(drinks);
+            return Ok(_mapper.Map<List<DrinkDto>>(drinks));
         }
 
         // GET api/<DrinkController>/5
@@ -49,25 +43,12 @@ namespace restaurant_reservation.Controllers
         {
             var drink = _drinkRepository.GetById(id);
 
-            if(drink == null)
+            if (drink == null)
             {
                 return NotFound();
             }
 
-            var drinkDto = new DrinkDto
-            {
-                Id = drink.Id,
-                Name = drink.Name,
-                Description = drink.Description,
-                Calories = drink.Calories,
-                Price = drink.Price,
-                MenuId = drink.MenuId,
-                IsAlcoholic = drink.IsAlcoholic,
-                ContainsCaffeine = drink.ContainsCaffeine,
-                ContainsSugar = drink.ContainsSugar
-            };
-
-            return Ok(drinkDto);
+            return Ok(_mapper.Map<DrinkDto>(drink));
         }
 
         // POST api/<DrinkController>
@@ -75,68 +56,42 @@ namespace restaurant_reservation.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Post(DrinkDto drinkDto)
         {
-            if(drinkDto == null || !ModelState.IsValid)
+            if (drinkDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var drink = new Drink
-            {
-                Id = drinkDto.Id,
-                Name = drinkDto.Name,
-                Description = drinkDto.Description,
-                Calories = drinkDto.Calories,
-                Price = drinkDto.Price,
-                MenuId = drinkDto.MenuId,
-                IsAlcoholic = drinkDto.IsAlcoholic,
-                ContainsCaffeine = drinkDto.ContainsCaffeine,
-                ContainsSugar = drinkDto.ContainsSugar
-            };
+            var drink = _mapper.Map<Drink>(drinkDto);
 
-            var menu = _menuRepository.Menus().FirstOrDefault(m=> m.Id == drinkDto.MenuId);
-
-            if(menu != null)
+            var menu = _menuRepository.Menus().FirstOrDefault(m => m.Id == drinkDto.MenuId);
+            if (menu != null)
             {
                 drink.Menu = menu;
             }
 
             _drinkRepository.Add(drink);
 
-            return CreatedAtAction(nameof(GetDrink), new { id = drink.Id }, new DrinkDto
-            {
-                Id = drink.Id,
-                Name = drink.Name,
-                Description = drink.Description,
-                Price= drink.Price,
-                Calories= drink.Calories,
-                MenuId= drink.MenuId,
-                IsAlcoholic = drink.IsAlcoholic,
-                ContainsCaffeine= drink.ContainsCaffeine,
-                ContainsSugar = drink.ContainsSugar
-            });
+            return CreatedAtAction(nameof(GetDrink), new { id = drink.Id }, _mapper.Map<DrinkDto>(drink));
         }
 
         // PUT api/<DrinkController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult UpdateDrink(int id, Drink drink)
+        public IActionResult UpdateDrink(int id, DrinkDto drinkDto)
         {
-            if (drink == null || !ModelState.IsValid)
+            if (drinkDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
             var drinkToUpdate = _drinkRepository.GetById(id);
+            if (drinkToUpdate == null)
+            {
+                return NotFound();
+            }
 
-            drinkToUpdate.Name = drink.Name;
-            drinkToUpdate.Description = drink.Description;
-            drinkToUpdate.Calories = drink.Calories;
-            drinkToUpdate.Price = drink.Price;
-            drinkToUpdate.MenuId = drink.MenuId;
-            drinkToUpdate.Menu = _menuRepository.GetById(drink.MenuId) ?? null;
-            drinkToUpdate.IsAlcoholic = drink.IsAlcoholic;
-            drinkToUpdate.ContainsCaffeine = drink.ContainsCaffeine;
-            drinkToUpdate.ContainsSugar = drink.ContainsSugar;
+            _mapper.Map(drinkDto, drinkToUpdate);
+            drinkToUpdate.Menu = _menuRepository.GetById(drinkDto.MenuId) ?? null;
 
             _drinkRepository.Update(drinkToUpdate);
 

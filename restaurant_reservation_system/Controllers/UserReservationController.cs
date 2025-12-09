@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation.Models;
 using restaurant_reservation_system.Models.Dto;
 using restaurant_reservation_system.Models.ViewModel;
@@ -9,8 +10,9 @@ namespace restaurant_reservation_system.Controllers
     public class UserReservationController : Controller
     {
         private readonly HttpClient client;
+        private readonly IMapper _mapper;
 
-        public UserReservationController(IConfiguration config)
+        public UserReservationController(IConfiguration config, IMapper mapper)
         {
             var baseUrl = config["ApiSettings:BaseUrl"];
 
@@ -18,6 +20,7 @@ namespace restaurant_reservation_system.Controllers
             {
                 BaseAddress = new Uri(baseUrl)
             };
+            _mapper = mapper;
         }
 
         public async Task<IActionResult> Create()
@@ -63,13 +66,7 @@ namespace restaurant_reservation_system.Controllers
                 return RedirectToAction("Login", "Users");
             }
 
-            var reservationDto = new UserReservationDto
-            {
-                CustomerId = model.CustomerId,
-                ReservationDate = model.ReservationDate,
-                ReservationHour = model.ReservationHour,
-                NumberOfGuests = model.NumberOfGuests
-            };
+            var reservationDto = _mapper.Map<UserReservationDto>(model);
 
             client.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", HttpContext.Session.GetString("token"));
@@ -120,21 +117,7 @@ namespace restaurant_reservation_system.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var customerDetails = await response.Content.ReadFromJsonAsync<MyReservationsDto>();
-                var reservations = new List<MyReservationsViewModel>();
-                    
-                foreach(var reservation in customerDetails.Reservations)
-                {
-                    reservations.Add(new MyReservationsViewModel
-                    {
-                        Id = reservation.Id,
-                        CustomerId = reservation.CustomerId,
-                        Status = reservation.Status,
-                        ReservationDate = reservation.ReservationDate,
-                        ReservationHour = reservation.ReservationDate.Hour.ToString(),
-                        NumberOfGuests = reservation.NumberOfGuests,
-                        CreatedAt = reservation.CreatedAt
-                    }); 
-                }
+                var reservations = _mapper.Map<List<MyReservationsViewModel>>(customerDetails.Reservations);
 
                 return View(reservations);
             }

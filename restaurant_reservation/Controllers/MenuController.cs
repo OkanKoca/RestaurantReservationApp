@@ -10,6 +10,7 @@ using restaurant_reservation_api.Dto;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,12 +24,15 @@ namespace restaurant_reservation.Controllers
         private readonly IDrinkRepository _drinkRepository;
         private readonly IFoodRepository _foodRepository;
         private readonly IDistributedCache _distributedCache;
-        public MenuController(IMenuRepository menuRepository, IDrinkRepository drinkRepository, IFoodRepository foodRepository, IDistributedCache distributedCache)
+        private readonly IMapper _mapper;
+
+        public MenuController(IMenuRepository menuRepository, IDrinkRepository drinkRepository, IFoodRepository foodRepository, IDistributedCache distributedCache, IMapper mapper)
         {
             _menuRepository = menuRepository;
             _drinkRepository = drinkRepository;
             _foodRepository = foodRepository;
             _distributedCache = distributedCache;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -37,7 +41,7 @@ namespace restaurant_reservation.Controllers
             var cacheKey = "menu_list";
             var cachedData = await _distributedCache.GetStringAsync(cacheKey);
 
-            if(cachedData != null)
+            if (cachedData != null)
             {
                 var menus = JsonSerializer.Deserialize<List<MenuDto>>(cachedData);
                 return Ok(menus);
@@ -75,54 +79,25 @@ namespace restaurant_reservation.Controllers
         [HttpGet("{id}/drinks")]
         public List<DrinkDto> GetMenuDrinks(int id)
         {
-            List<DrinkDto> drinks = new List<DrinkDto>();
-
-            if(_menuRepository.GetById(id).Drinks != null)
+            var menu = _menuRepository.GetById(id);
+            if (menu?.Drinks == null)
             {
-                foreach(var drink in _menuRepository.GetById(id).Drinks)
-                {
-                    drinks.Add(new DrinkDto
-                    {
-                        Id = drink.Id,
-                        Name = drink.Name,
-                        Description = drink.Description,
-                        Calories = drink.Calories,
-                        Price = drink.Price,
-                        MenuId = drink.MenuId,
-                        IsAlcoholic = drink.IsAlcoholic,
-                        ContainsCaffeine = drink.ContainsCaffeine,
-                        ContainsSugar = drink.ContainsSugar
-                    });
-                }
+                return new List<DrinkDto>();
             }
 
-            return drinks;
+            return _mapper.Map<List<DrinkDto>>(menu.Drinks);
         }
 
         [HttpGet("{id}/foods")]
         public List<FoodDto> GetMenuFood(int id)
         {
-            List<FoodDto> foods = new List<FoodDto>();
-
-            if (_menuRepository.GetById(id).Foods != null)
+            var menu = _menuRepository.GetById(id);
+            if (menu?.Foods == null)
             {
-                foreach (var food in _menuRepository.GetById(id).Foods)
-                {
-                    foods.Add(new FoodDto
-                    {
-                        Id = food.Id,
-                        Name = food.Name,
-                        Description = food.Description,
-                        Calories = food.Calories,
-                        Price = food.Price,
-                        MenuId = food.MenuId,
-                        IsVegan= food.IsVegan,
-                        ContainsGluten = food.ContainsGluten
-                    });
-                }
+                return new List<FoodDto>();
             }
 
-            return foods;
+            return _mapper.Map<List<FoodDto>>(menu.Foods);
         }
 
         // POST api/<MenuController>
@@ -167,7 +142,6 @@ namespace restaurant_reservation.Controllers
             List<Food> foods = GetFoodList(menuDto.FoodIds);
 
             var menuToUpdate = _menuRepository.GetById(id);
-
             menuToUpdate.Name = menuDto.Name;
             menuToUpdate.Description = menuDto.Description;
             menuToUpdate.Drinks = drinks;

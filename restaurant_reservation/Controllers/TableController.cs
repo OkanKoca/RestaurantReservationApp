@@ -5,6 +5,7 @@ using restaurant_reservation.Dto;
 using Microsoft.AspNetCore.Authorization;
 using restaurant_reservation_api.Dto;
 using restaurant_reservation_api.Models;
+using AutoMapper;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,33 +16,20 @@ namespace restaurant_reservation.Controllers
     public class TableController : ControllerBase
     {
         private readonly ITableRepository _tableRepository;
+        private readonly IMapper _mapper;
 
-        public TableController(ITableRepository tableRepository)
+        public TableController(ITableRepository tableRepository, IMapper mapper)
         {
             _tableRepository = tableRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public List<TableDto> GetAllTables()
         {
-            var tableDtos = new List<TableDto>();
-            var tables = _tableRepository.Tables();
-
-            foreach(var table in tables)
-            {
-                tableDtos.Add(
-                    new TableDto
-                    {
-                        Id = table.Id,
-                        Number = table.Number,
-                        Seats = table.Seats,
-                        IsReserved = table.IsReserved
-                    }
-                );
-            }
-
-            return tableDtos;
+            var tables = _tableRepository.Tables().ToList();
+            return _mapper.Map<List<TableDto>>(tables);
         }
 
         // GET api/<TableController>/5
@@ -66,17 +54,9 @@ namespace restaurant_reservation.Controllers
                 query = query.Where(r => r.ReservationDate.Date == d);
             }
 
-            var userReservations = query.Select(r=> new UserReservationDto
-            {
-                CustomerId =0, // this is not needed for now, I assign it0 because I use UserReservationDto
-                ReservationDate = r.ReservationDate,
-                NumberOfGuests = r.NumberOfGuests,
-                ReservationHour = r.ReservationDate.Hour.ToString(),
-                Status = r.Status,
-                CreatedAt = r.CreatedAt
-            }).ToList();
+            var userReservations = _mapper.Map<List<UserReservationDto>>(query.ToList());
 
-            if(userReservations == null)
+            if (userReservations == null)
             {
                 return NotFound();
             }
@@ -98,17 +78,7 @@ namespace restaurant_reservation.Controllers
                 query = query.Where(g => g.ReservationDate.Date == d);
             }
 
-            var guestReservations = query.Select(g=> new AdminGuestReservationTableDto { 
-                Id = g.Id,
-                FullName = g.FullName,
-                Email = g.Email,
-                PhoneNumber = g.PhoneNumber,
-                ReservationDate = g.ReservationDate,
-                NumberOfGuests = g.NumberOfGuests,
-                ReservationHour = g.ReservationDate.Hour.ToString(),
-                Status = g.Status,
-                CreatedAt = g.CreatedAt
-            }).ToList();
+            var guestReservations = _mapper.Map<List<AdminGuestReservationTableDto>>(query.ToList());
 
             if (guestReservations == null)
             {
@@ -119,18 +89,18 @@ namespace restaurant_reservation.Controllers
         }
 
         [HttpGet("{id}/Occupancy")]
-        
+
         [Authorize(Roles = "Admin")]
-        public IActionResult GetTableOccupancy(int id, [FromQuery]DateTime dateTime)
+        public IActionResult GetTableOccupancy(int id, [FromQuery] DateTime dateTime)
         {
             var countOfWorkingHours = WorkingHours.Hours.Length;
 
             var userReservations = _tableRepository.GetById(id).UserReservations.Where(u => u.ReservationDate.Date == dateTime.Date).ToList();
-            var guestReservations = _tableRepository.GetById(id).GuestReservations.Where(g=> g.ReservationDate.Date == dateTime.Date).ToList();
+            var guestReservations = _tableRepository.GetById(id).GuestReservations.Where(g => g.ReservationDate.Date == dateTime.Date).ToList();
 
-            int countOfReservationsAtDate = userReservations.Count + guestReservations.Count; 
+            int countOfReservationsAtDate = userReservations.Count + guestReservations.Count;
 
-            var rate = ((double)countOfReservationsAtDate / countOfWorkingHours) *100;
+            var rate = ((double)countOfReservationsAtDate / countOfWorkingHours) * 100;
 
             return new JsonResult(rate);
         }
@@ -146,11 +116,7 @@ namespace restaurant_reservation.Controllers
                 return BadRequest(ModelState);
             }
 
-            var table = new Table
-            {
-                Number = tableDto.Number,
-                Seats = tableDto.Seats
-            };
+            var table = _mapper.Map<Table>(tableDto);
 
             _tableRepository.Add(table);
             return CreatedAtAction(nameof(GetTable), new { id = table.Id }, table);
@@ -167,12 +133,11 @@ namespace restaurant_reservation.Controllers
             }
             var table = _tableRepository.GetById(id);
 
-            table.Number = tableDto.Number;
-            table.Seats = tableDto.Seats;
+            _mapper.Map(tableDto, table);
 
             _tableRepository.Update(table);
 
-            return NoContent(); 
+            return NoContent();
         }
 
         // DELETE api/<TableController>/5
@@ -184,7 +149,7 @@ namespace restaurant_reservation.Controllers
             {
                 return NotFound($"Table with ID {id} not found.");
             }
-            
+
             _tableRepository.Delete(id);
             return NoContent();
         }

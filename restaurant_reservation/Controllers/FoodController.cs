@@ -5,6 +5,7 @@ using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation_api.Dto;
+using AutoMapper;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -16,31 +17,23 @@ namespace restaurant_reservation.Controllers
     {
         private readonly IFoodRepository _foodRepository;
         private readonly IMenuRepository _menuRepository;
-        public FoodController(IFoodRepository foodRepository, IMenuRepository menuRepository)
+        private readonly IMapper _mapper;
+
+        public FoodController(IFoodRepository foodRepository, IMenuRepository menuRepository, IMapper mapper)
         {
             _foodRepository = foodRepository;
             _menuRepository = menuRepository;
+            _mapper = mapper;
         }
-        
+
         [HttpGet]
         public ActionResult<List<FoodDto>> GetAllFoods()
         {
             var foods = _foodRepository.Foods()
-                .Include(f => f.Menu)
-                .Select(f => new FoodDto
-                {
-                    Id = f.Id,
-                    Name = f.Name,
-                    Description = f.Description,
-                    Calories = f.Calories,
-                    Price = f.Price,
-                    MenuId = f.MenuId,
-                    IsVegan = f.IsVegan,
-                    ContainsGluten = f.ContainsGluten
-                })
-                .ToList();
+               .Include(f => f.Menu)
+                    .ToList();
 
-            return Ok(foods);
+            return Ok(_mapper.Map<List<FoodDto>>(foods));
         }
 
         // GET api/<foodController>/5
@@ -53,19 +46,7 @@ namespace restaurant_reservation.Controllers
                 return NotFound();
             }
 
-            var foodDto = new FoodDto
-            {
-                Id = food.Id,
-                Name = food.Name,
-                Description = food.Description,
-                Calories = food.Calories,
-                Price = food.Price,
-                MenuId = food.MenuId,
-                IsVegan = food.IsVegan,
-                ContainsGluten = food.ContainsGluten
-            };
-
-            return Ok(foodDto);
+            return Ok(_mapper.Map<FoodDto>(food));
         }
 
         // POST api/<foodController>
@@ -78,19 +59,9 @@ namespace restaurant_reservation.Controllers
                 return BadRequest(ModelState);
             }
 
-            var food = new Food
-            {
-                Name = foodDto.Name,
-                Description = foodDto.Description,
-                Calories = foodDto.Calories,
-                Price = foodDto.Price,
-                MenuId = foodDto.MenuId,
-                IsVegan = foodDto.IsVegan,
-                ContainsGluten = foodDto.ContainsGluten
-            };
+            var food = _mapper.Map<Food>(foodDto);
 
             var menu = _menuRepository.Menus().FirstOrDefault(m => m.Id == food.MenuId);
-
             if (menu != null)
             {
                 food.Menu = menu;
@@ -98,17 +69,7 @@ namespace restaurant_reservation.Controllers
 
             _foodRepository.Add(food);
 
-            var createdFoodDto = new FoodDto
-            {
-                Id = food.Id,
-                Name = food.Name,
-                Description = food.Description,
-                Calories = food.Calories,
-                Price = food.Price,
-                MenuId = food.MenuId,
-                IsVegan = food.IsVegan,
-                ContainsGluten = food.ContainsGluten
-            };
+            var createdFoodDto = _mapper.Map<FoodDto>(food);
 
             return CreatedAtAction(nameof(GetFood), new { id = food.Id }, createdFoodDto);
         }
@@ -116,23 +77,21 @@ namespace restaurant_reservation.Controllers
         // PUT api/<foodController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult Updatefood(int id, Food food)
+        public IActionResult Updatefood(int id, FoodDto foodDto)
         {
-            if (food == null || !ModelState.IsValid)
+            if (foodDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
             var foodToUpdate = _foodRepository.GetById(id);
+            if (foodToUpdate == null)
+            {
+                return NotFound();
+            }
 
-            foodToUpdate.Name = food.Name;
-            foodToUpdate.Description = food.Description;
-            foodToUpdate.Calories = food.Calories;
-            foodToUpdate.Price = food.Price;
-            foodToUpdate.MenuId = food.MenuId;
-            foodToUpdate.Menu = _menuRepository.GetById(food.MenuId) ?? null;
-            foodToUpdate.IsVegan = food.IsVegan;
-            foodToUpdate.ContainsGluten = food.ContainsGluten;
+            _mapper.Map(foodDto, foodToUpdate);
+            foodToUpdate.Menu = _menuRepository.GetById(foodDto.MenuId) ?? null;
 
             _foodRepository.Update(foodToUpdate);
 
