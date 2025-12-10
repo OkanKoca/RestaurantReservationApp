@@ -4,8 +4,6 @@ using restaurant_reservation_system.Models.ViewModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
-//using Microsoft.AspNetCore.Authentication;
-//using System.Security.Claims;
 
 namespace restaurant_reservation_system.Controllers
 {
@@ -42,14 +40,21 @@ namespace restaurant_reservation_system.Controllers
 
                             var handler = new JwtSecurityTokenHandler();
                             var jwtToken = handler.ReadJwtToken(tokenResponse.Token);
-                            //var role = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "Customer";
 
-                            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role); // somehow it returns null 
-                            var roleClaimRaw = jwtToken.Claims.FirstOrDefault(c => c.Type == "role"); // this is an alternative way if it is null
-
+                            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+                            var roleClaimRaw = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
                             var role = roleClaim?.Value ?? roleClaimRaw?.Value ?? "Customer";
 
+                            // UserId'yi JWT token'dan al ve session'a kaydet
+                            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+                            var userIdClaimRaw = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid" || c.Type == "sub");
+                            var userId = userIdClaim?.Value ?? userIdClaimRaw?.Value;
+
                             HttpContext.Session.SetString("role", role);
+                            if (!string.IsNullOrEmpty(userId))
+                            {
+                                HttpContext.Session.SetString("userId", userId);
+                            }
 
                             TempData["SuccessMessage"] = "Logged in successfully!!";
                             return RedirectToAction("Index", "Home");
@@ -76,30 +81,23 @@ namespace restaurant_reservation_system.Controllers
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = new Uri("https://localhost:7284/api/");
-
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-
                     var response = await client.PostAsync("users/logout", null);
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-
-                    }
                 }
             }
 
             HttpContext.Session.Remove("token");
+            HttpContext.Session.Remove("role");
+            HttpContext.Session.Remove("userId");
             TempData["SuccessMessage"] = "Logged out successfully.";
             return RedirectToAction("Index", "Home");
         }
 
-
-
         [HttpPost]
         public IActionResult Register(RegisterViewModel model)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 using (var client = new HttpClient())
                 {
@@ -114,7 +112,7 @@ namespace restaurant_reservation_system.Controllers
                     }
                     else
                     {
-                        TempData["SuccessMessage"] = "Registration failed! Please try again."; 
+                        TempData["SuccessMessage"] = "Registration failed! Please try again.";
                         var errorContent = response.Content.ReadAsStringAsync().Result;
                         ModelState.AddModelError("", $"Registraion failed: {errorContent}");
                     }

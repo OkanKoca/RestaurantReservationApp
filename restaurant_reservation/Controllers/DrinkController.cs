@@ -17,9 +17,9 @@ namespace restaurant_reservation.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<DrinkDto>> GetAllDrinks()
+        public async Task<ActionResult<List<DrinkDto>>> GetAllDrinks()
         {
-            var drinks = _drinkService.GetAllDrinks();
+            var drinks = await _drinkService.GetAllDrinksAsync();
             return Ok(drinks);
         }
 
@@ -36,20 +36,20 @@ namespace restaurant_reservation.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public IActionResult Post(DrinkDto drinkDto)
+        public async Task<IActionResult> Post(DrinkDto drinkDto)
         {
             if (drinkDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var createdDrink = _drinkService.CreateDrink(drinkDto);
+            var createdDrink = await _drinkService.CreateDrinkAsync(drinkDto);
             return CreatedAtAction(nameof(GetDrink), new { id = createdDrink.Id }, createdDrink);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult UpdateDrink(int id, DrinkDto drinkDto)
+        public async Task<IActionResult> UpdateDrink(int id, DrinkDto drinkDto)
         {
             if (drinkDto == null || !ModelState.IsValid)
             {
@@ -58,7 +58,7 @@ namespace restaurant_reservation.Controllers
 
             try
             {
-                _drinkService.UpdateDrink(id, drinkDto);
+                await _drinkService.UpdateDrinkAsync(id, drinkDto);
                 return NoContent();
             }
             catch (KeyNotFoundException)
@@ -69,9 +69,9 @@ namespace restaurant_reservation.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _drinkService.DeleteDrink(id);
+            await _drinkService.DeleteDrinkAsync(id);
             return NoContent();
         }
     }

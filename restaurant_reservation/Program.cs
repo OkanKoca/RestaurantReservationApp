@@ -28,8 +28,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "RestaurantReservation_";
 });
 
-// ?? RabbitMQ Services
+// RabbitMQ Services
 builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
+
 builder.Services.AddHostedService<EmailConsumerService>();
 
 builder.Services.AddIdentity<AppUser, AppRole>()
@@ -116,5 +117,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AdminHub>("/adminHub");
+app.MapHub<UserNotificationHub>("/userNotificationHub");
 
 app.Run();

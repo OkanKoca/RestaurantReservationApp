@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Models;
@@ -11,6 +12,7 @@ public class DrinkServiceTests
 {
     private readonly Mock<IDrinkRepository> _drinkRepositoryMock;
     private readonly Mock<IMenuRepository> _menuRepositoryMock;
+    private readonly Mock<IDistributedCache> _distributedCacheMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly DrinkService _service;
 
@@ -18,11 +20,13 @@ public class DrinkServiceTests
     {
         _drinkRepositoryMock = new Mock<IDrinkRepository>();
         _menuRepositoryMock = new Mock<IMenuRepository>();
+        _distributedCacheMock = new Mock<IDistributedCache>();
         _mapperMock = new Mock<IMapper>();
 
         _service = new DrinkService(
             _drinkRepositoryMock.Object,
             _menuRepositoryMock.Object,
+            _distributedCacheMock.Object,
             _mapperMock.Object);
     }
 

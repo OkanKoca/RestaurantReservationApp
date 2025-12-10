@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - restaurant_reservation_system</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/restaurant_reservation_system.styles.css" asp-append-version="true" />
 </head>
@@ -30,7 +31,7 @@
 
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Home" asp-action="Menus">Menus</a>
-                            </li> 
+                            </li>
                         }
                         else
                         {
@@ -40,9 +41,9 @@
 
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Home" asp-action="Menus">Menus</a>
-                            </li> 
+                            </li>
 
-                            @if(Context.Session.GetString("role") == "Admin")
+                            @if (Context.Session.GetString("role") == "Admin")
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin Dashboard</a>
@@ -50,7 +51,7 @@
                             }
                         }
 
-                    </ul>                    
+                    </ul>
                     <ul class="navbar-nav">
                         @if (!string.IsNullOrEmpty(Context.Session.GetString("token")))
                         {
@@ -101,6 +102,29 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @* SignalR ve User Notification - sadece giriş yapmış kullanıcılar için *@
+    @if (!string.IsNullOrEmpty(Context.Session.GetString("token")) && !string.IsNullOrEmpty(Context.Session.GetString("userId")))
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+        <script src="~/js/user-notification.js" asp-append-version="true"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var userId = '@Context.Session.GetString("userId")';
+                    if (userId) {
+                        UserNotification.init(userId);
+                    }
+               });
+
+                // Sayfa kapanırken bağlantıyı kes
+                window.addEventListener('beforeunload', function() {
+                    if (typeof UserNotification !== 'undefined') {
+                    UserNotification.disconnect();
+                 }
+             });
+        </script>
+    }
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

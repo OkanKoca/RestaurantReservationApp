@@ -6,75 +6,318 @@
 
 @model List<MyReservationsViewModel>
 
-<div class="container mt-4">
-    <h2 class="text-center mb-4">My Reservations</h2>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        @{
-            int i = 1;
+<style>
+    .reservation-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+        .reservation-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
         }
-        @foreach (var reservation in Model)
+
+        .reservation-card .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: none;
+            background: linear-gradient(135deg, #2C3E50 0%, #3d566e 100%);
+        }
+
+    .reservation-number {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-confirmed {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #f39c12, #f1c40f);
+        color: #333;
+    }
+
+    .status-outdated {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .reservation-card .card-body {
+        padding: 1.5rem;
+        background: #fff;
+    }
+
+    .reservation-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .detail-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 0.75rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+        .detail-item:hover {
+            background: #e9ecef;
+        }
+
+        .detail-item i {
+            font-size: 1.2rem;
+            color: #2C3E50;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+    .detail-label {
+        font-size: 0.65rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    .detail-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .created-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #999;
+        padding: 0.5rem 0;
+        border-top: 1px dashed #e0e0e0;
+        margin-bottom: 1rem;
+    }
+
+        .created-info i {
+            font-size: 0.7rem;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 80px;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+    .page-header {
+        background: linear-gradient(135deg, #2C3E50 0%, #3d566e 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(44, 62, 80, 0.3);
+    }
+
+        .page-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+    .stats-container {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #bdc3c7;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            color: #2C3E50;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="page-header text-center">
+        <h2><i class="fas fa-calendar-alt me-2"></i>My Reservations</h2>
+        <p class="mb-0 mt-2 opacity-75">View and manage your restaurant reservations</p>
+        @if (Model.Any())
         {
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-header text-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            @if (reservation.Status == ReservationStatus.Confirmed.ToString())
-                            {
-                                <span class="badge bg-success">@reservation.Status</span>
-                            }
-                            else if(reservation.Status == ReservationStatus.Pending.ToString())
-                            {
-                                <span class="badge bg-warning">@reservation.Status</span>
-                            }
-                            else if(reservation.Status == ReservationStatus.Outdated.ToString())
-                            {
-                                <span class="badge bg-danger">@reservation.Status</span>
-                            }
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">Reservation #@i</h5>
-
-                        <div class="mb-3">
-                            <i class="bi bi-calendar-date"></i>
-                            <span class="ms-2">@reservation.ReservationDateLocal.ToShortDateString()</span>
-                        </div>
-                        <div class="mb-3">
-                            <i class="bi bi-clock"></i>
-                            <span class="ms-2">@reservation.ReservationHour:00</span>
-                        </div>
-                        <div class="mb-3">
-                            <i class="bi bi-people"></i>
-                            <span class="ms-2">@reservation.NumberOfGuests guests</span>
-                        </div>
-                        <div class="text-muted small">
-                            <i class="bi bi-calendar-check"></i>
-                            <span class="ms-2">Created: @reservation.CreatedAtLocal.ToShortDateString() @reservation.CreatedAtLocal.ToShortTimeString()</span>
-                        </div>
-
-                        <br />
-                        <form asp-action="CancelReservation" asp-controller="UserReservation" id="cancelForm_@reservation.Id">
-                            <input hidden name="id" value="@reservation.Id"/>
-                            @if (reservation.Status != ReservationStatus.Outdated.ToString())
-                            {
-                                <button type="button"
-                                        class="btn btn-outline-danger btn-sm"
-                                        onclick="showDeleteModal(@reservation.Id)">
-                                    Cancel
-                                </button>
-                            }
-                            
-                        </form>
-                    </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <i class="fas fa-list"></i>
+                    <span>@Model.Count Total</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>@Model.Count(r => r.Status == ReservationStatus.Confirmed.ToString()) Confirmed</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <span>@Model.Count(r => r.Status == ReservationStatus.Pending.ToString()) Pending</span>
                 </div>
             </div>
-
-            i++;
         }
     </div>
-    <partial name="_DeleteConfirmationModal" />
 
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h4>No Reservations Yet</h4>
+            <p>You haven't made any reservations. Start by booking a table!</p>
+            <a href="@Url.Action("Create", "UserReservation")" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Make a Reservation
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @{
+                int i = 1;
+            }
+            @foreach (var reservation in Model)
+            {
+                <div class="col">
+                    <div class="card reservation-card h-100">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                @if (reservation.Status == ReservationStatus.Confirmed.ToString())
+                                {
+                                    <span class="status-badge status-confirmed">
+                                        <i class="fas fa-check-circle me-1"></i>@reservation.Status
+                                    </span>
+                                }
+                                else if (reservation.Status == ReservationStatus.Pending.ToString())
+                                {
+                                    <span class="status-badge status-pending">
+                                        <i class="fas fa-clock me-1"></i>@reservation.Status
+                                    </span>
+                                }
+                                else if (reservation.Status == ReservationStatus.Outdated.ToString())
+                                {
+                                    <span class="status-badge status-outdated">
+                                        <i class="fas fa-times-circle me-1"></i>@reservation.Status
+                                    </span>
+                                }
+                            </div>
+                            <h5 class="reservation-number">
+                                <i class="fas fa-hashtag me-1"></i>Reservation @i
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="reservation-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">@reservation.ReservationDateLocal.ToString("dd MMM yyyy")</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span class="detail-label">Time</span>
+                                    <span class="detail-value">@reservation.ReservationHour:00</span>
+                                </div>
+                                <div class="detail-item" style="grid-column: span 2;">
+                                    <i class="fas fa-users"></i>
+                                    <span class="detail-label">Guests</span>
+                                    <span class="detail-value">@reservation.NumberOfGuests People</span>
+                                </div>
+                            </div>
+
+                            <div class="created-info">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Created: @reservation.CreatedAtLocal.ToString("dd MMM yyyy, HH:mm")</span>
+                            </div>
+
+                            <div class="action-buttons">
+                                <form asp-action="CancelReservation" asp-controller="UserReservation" id="cancelForm_@reservation.Id">
+                                    <input hidden name="id" value="@reservation.Id" />
+                                    @if (reservation.Status != ReservationStatus.Outdated.ToString())
+                                    {
+                                        <button type="button"
+                                                class="btn btn-outline-danger"
+                                                onclick="showDeleteModal(@reservation.Id)">
+                                            <i class="fas fa-times"></i> Cancel Reservation
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">
+                                            <i class="fas fa-info-circle me-1"></i>This reservation has expired
+                                        </span>
+                                    }
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                i++;
+            }
+        </div>
+    }
+
+    <partial name="_DeleteConfirmationModal" />
 </div>
 
 @section Scripts {
@@ -82,21 +325,9 @@
         function showDeleteModal(reservationId) {
             const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
             document.getElementById('confirmDeleteBtn').onclick = function () {
-                document.getElementById(`cancelForm_${reservationId}`).submit();
+                document.getElementById('cancelForm_' + reservationId).submit();
             };
             modal.show();
         }
     </script>
 }
-
-<style >
-    .card {
-        transition: transform 0.2s;
-        cursor: pointer;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-</style>

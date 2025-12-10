@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Get Reservation";
+  var today = DateTime.Now.ToString("yyyy-MM-dd");
 }
 
 @model UserReservationViewModel
@@ -38,7 +39,8 @@
                         <div class="mb-3">
                             <label asp-for="ReservationDate" class="form-label"></label>
                             <input asp-for="ReservationDate" class="form-control" type="date"
-                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   min="@today"
+                                   value="@today"
                                    onchange="loadAvailableHours(this.value)" />
                             <span asp-validation-for="ReservationDate" class="text-danger"></span>
                         </div>
@@ -100,8 +102,8 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const dateInput = document.querySelector('input[type="date"]');
-            if (!dateInput.value) {
-                document.getElementById('hourSelect').disabled = true;
+            if (dateInput.value) {
+              loadAvailableHours(dateInput.value);
             }
         });
     </script>

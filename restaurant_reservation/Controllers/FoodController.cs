@@ -17,9 +17,9 @@ namespace restaurant_reservation.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<FoodDto>> GetAllFoods()
+        public async Task<ActionResult<List<FoodDto>>> GetAllFoods()
         {
-            var foods = _foodService.GetAllFoods();
+            var foods = await _foodService.GetAllFoodsAsync();
             return Ok(foods);
         }
 
@@ -38,21 +38,21 @@ namespace restaurant_reservation.Controllers
         // POST api/<foodController>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public IActionResult Post(FoodDto foodDto)
+        public async Task<IActionResult> Post(FoodDto foodDto)
         {
             if (foodDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var createdFood = _foodService.CreateFood(foodDto);
+            var createdFood = await _foodService.CreateFoodAsync(foodDto);
             return CreatedAtAction(nameof(GetFood), new { id = createdFood.Id }, createdFood);
         }
 
         // PUT api/<foodController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult UpdateFood(int id, FoodDto foodDto)
+        public async Task<IActionResult> UpdateFood(int id, FoodDto foodDto)
         {
             if (foodDto == null || !ModelState.IsValid)
             {
@@ -61,7 +61,7 @@ namespace restaurant_reservation.Controllers
 
             try
             {
-                _foodService.UpdateFood(id, foodDto);
+                await _foodService.UpdateFoodAsync(id, foodDto);
                 return NoContent();
             }
             catch (KeyNotFoundException)
@@ -73,9 +73,9 @@ namespace restaurant_reservation.Controllers
         // DELETE api/<foodController>/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _foodService.DeleteFood(id);
+            await _foodService.DeleteFoodAsync(id);
             return NoContent();
         }
     }

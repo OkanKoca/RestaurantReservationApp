@@ -18,15 +18,18 @@ namespace restaurant_reservation.Controllers
         private readonly IUserReservationService _userReservationService;
         private readonly UserManager<AppUser> _userManager;
         private readonly IHubContext<AdminHub> _hubContext;
+        private readonly IHubContext<UserNotificationHub> _userNotificationHub;
 
         public UserReservationController(
             IUserReservationService userReservationService,
             UserManager<AppUser> userManager,
-            IHubContext<AdminHub> hubContext)
+            IHubContext<AdminHub> hubContext,
+            IHubContext<UserNotificationHub> userNotificationHub)
         {
             _userReservationService = userReservationService;
             _userManager = userManager;
             _hubContext = hubContext;
+            _userNotificationHub = userNotificationHub;
         }
 
         [Authorize(Roles = "Admin")]
@@ -110,6 +113,27 @@ namespace restaurant_reservation.Controllers
             {
                 return NotFound($"User reservation with ID {id} not found.");
             }
+
+            var reservation = _userReservationService.GetUserReservationById(id);
+
+            // Kullanıcıya SignalR ile bildirim gönder
+            if (reservation?.Customer != null)
+            {
+                var isConfirmed = reservation.Status == "Confirmed";
+                await _userNotificationHub.Clients
+                   .Group($"user_{reservation.Customer.Id}")
+                  .SendAsync("ReservationStatusChanged", new
+                  {
+                      ReservationId = id,
+                      NewStatus = reservation.Status,
+                      ReservationDate = reservation.ReservationDate.ToShortDateString(),
+                      ReservationHour = reservation.ReservationDate.ToShortTimeString(),
+                      Message = isConfirmed
+                      ? "Rezervasyonunuz onaylandı!"
+                      : "Rezervasyonunuzun onayı iptal edildi."
+                  });
+            }
+
             return NoContent();
         }
 

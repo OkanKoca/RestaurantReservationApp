@@ -1,6 +1,10 @@
 ﻿@using restaurant_reservation_system.Models.ViewModel
 @model GuestReservationViewModel
 
+@{
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
@@ -34,7 +38,8 @@
                         <div class="mb-3">
                             <label asp-for="ReservationDate" class="form-label"></label>
                             <input asp-for="ReservationDate" class="form-control" type="date"
-                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   min="@today"
+                                   value="@today"
                                    onchange="loadAvailableHours(this.value)" />
                             <span asp-validation-for="ReservationDate" class="text-danger"></span>
                         </div>
@@ -53,53 +58,53 @@
         </div>
     </div>
 
-</div> 
+</div>
 
 @section Scripts {
     <script>
 
-        async function loadAvailableHours(date) {
-            const hourSelect = document.getElementById('hourSelect');
+             async function loadAvailableHours(date) {
+                 const hourSelect = document.getElementById('hourSelect');
 
-            if (!date) {
-                hourSelect.disabled = true;
-                hourSelect.innerHTML = '<option value="">First you must select a date</option>';
-                return;
-            }
+                 if (!date) {
+                     hourSelect.disabled = true;
+                     hourSelect.innerHTML = '<option value="">First you must select a date</option>';
+                     return;
+                 }
 
-            hourSelect.disabled = true;
-            hourSelect.innerHTML = '<option value="">Loading...</option>';
+                 hourSelect.disabled = true;
+                 hourSelect.innerHTML = '<option value="">Loading...</option>';
 
-            try {
-                const response = await fetch(`https://localhost:7284/api/GuestReservation/available-hours?date=${date}`);
-                if (!response.ok) throw new Error('Hours couldn\'t be loaded');
+                 try {
+                     const response = await fetch(`https://localhost:7284/api/GuestReservation/available-hours?date=${date}`);
+                     if (!response.ok) throw new Error('Hours couldn\'t be loaded');
 
-                const hours = await response.json();
+                     const hours = await response.json();
 
-                hourSelect.innerHTML = '<option value="">Select an hour</option>';
+                     hourSelect.innerHTML = '<option value="">Select an hour</option>';
 
-                if (hours && hours.length > 0) {
-                    hours.forEach(hour => {
-                        const option = document.createElement('option');
-                        option.value = hour;
-                        option.textContent = hour;
-                        hourSelect.appendChild(option);
-                    });
-                    hourSelect.disabled = false;
-                } else {
-                    hourSelect.innerHTML = '<option value="">There is no available hours for this date</option>';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                hourSelect.innerHTML = '<option value="">An error occured, please try again.</option>';
-            }
-        }
+                     if (hours && hours.length > 0) {
+                         hours.forEach(hour => {
+                             const option = document.createElement('option');
+                             option.value = hour;
+                             option.textContent = hour;
+                             hourSelect.appendChild(option);
+                         });
+                         hourSelect.disabled = false;
+                     } else {
+                         hourSelect.innerHTML = '<option value="">There is no available hours for this date</option>';
+                     }
+                 } catch (error) {
+                     console.error('Error:', error);
+                     hourSelect.innerHTML = '<option value="">An error occured, please try again.</option>';
+                 }
+             }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.querySelector('input[type="date"]');
-            if (!dateInput.value) {
-                document.getElementById('hourSelect').disabled = true;
-            }
-        });
+             document.addEventListener('DOMContentLoaded', function() {
+                 const dateInput = document.querySelector('input[type="date"]');
+                 if (dateInput.value) {
+                    loadAvailableHours(dateInput.value);
+                 }
+             });
     </script>
 }
