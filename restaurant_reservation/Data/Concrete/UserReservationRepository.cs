@@ -13,10 +13,10 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext = restaurantContext;
         }
 
-        public void Add(UserReservation userReservation)
+        public async void Add(UserReservation userReservation)
         {
             _restaurantContext.Reservations.Add(userReservation);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
 
         public void Delete(int id)
@@ -32,7 +32,7 @@ namespace restaurant_reservation.Data.Concrete
 
         public UserReservation GetById(int id)
         {
-            var userReservation = _restaurantContext.Reservations.FirstOrDefault(t => t.Id == id);
+            var userReservation = _restaurantContext.Reservations.Include(c => c.Customer).Include(t=> t.Table).FirstOrDefault(t => t.Id == id);
 
             if (userReservation == null)
             {
@@ -42,10 +42,10 @@ namespace restaurant_reservation.Data.Concrete
             return userReservation;
         }
 
-        public void Update(UserReservation userReservation)
+        public async void Update(UserReservation userReservation)
         {
             _restaurantContext.Reservations.Update(userReservation);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
     }
 }

@@ -13,10 +13,10 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext = restaurantContext;
         }
 
-        public void Add(GuestReservation guestReservation)
+        public async void Add(GuestReservation guestReservation)
         {
             _restaurantContext.GuestReservations.Add(guestReservation);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
 
         public void Delete(int id)
@@ -42,10 +42,10 @@ namespace restaurant_reservation.Data.Concrete
             return guestReservation;
         }
 
-        public void Update(GuestReservation guestReservation)
+        public async void Update(GuestReservation guestReservation)
         {
             _restaurantContext.GuestReservations.Update(guestReservation);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
     }
 }

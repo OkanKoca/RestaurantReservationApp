@@ -1,157 +1,121 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using restaurant_reservation.Models;
-using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using Microsoft.AspNetCore.Authorization;
 using restaurant_reservation_api.Dto;
-using restaurant_reservation_api.Models;
-using AutoMapper;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using restaurant_reservation.Services.Abstract;
 
 namespace restaurant_reservation.Controllers
 {
-    [Route("api/[controller]")]
+  [Route("api/[controller]")]
     [ApiController]
     public class TableController : ControllerBase
     {
-        private readonly ITableRepository _tableRepository;
-        private readonly IMapper _mapper;
+        private readonly ITableService _tableService;
 
-        public TableController(ITableRepository tableRepository, IMapper mapper)
-        {
-            _tableRepository = tableRepository;
-            _mapper = mapper;
-        }
+   public TableController(ITableService tableService)
+ {
+  _tableService = tableService;
+ }
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public List<TableDto> GetAllTables()
+        public ActionResult<List<TableDto>> GetAllTables()
         {
-            var tables = _tableRepository.Tables().ToList();
-            return _mapper.Map<List<TableDto>>(tables);
+            var tables = _tableService.GetAllTables();
+ return Ok(tables);
         }
 
-        // GET api/<TableController>/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
-        public Table GetTable(int id)
+ [Authorize(Roles = "Admin")]
+        public ActionResult<Table> GetTable(int id)
         {
-            return _tableRepository.GetById(id);
+            var table = _tableService.GetTableById(id);
+       if (table == null)
+            {
+                return NotFound();
+            }
+      return Ok(table);
         }
 
         [HttpGet("{id}/UserReservations")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<UserReservationDto>> GetTableUserReservations(int id, [FromQuery] DateTime? dateTime = null)
+   public ActionResult<List<UserReservationDto>> GetTableUserReservations(int id, [FromQuery] DateTime? dateTime = null)
         {
-            var table = _tableRepository.GetById(id);
-            if (table == null) return NotFound();
-
-            var query = table.UserReservations.AsQueryable();
-            if (dateTime.HasValue)
+   var table = _tableService.GetTableById(id);
+            if (table == null)
             {
-                var d = dateTime.Value.Date;
-                query = query.Where(r => r.ReservationDate.Date == d);
-            }
+    return NotFound();
+          }
 
-            var userReservations = _mapper.Map<List<UserReservationDto>>(query.ToList());
-
-            if (userReservations == null)
-            {
-                return NotFound();
-            }
-
-            return userReservations;
+            var userReservations = _tableService.GetTableUserReservations(id, dateTime);
+   return Ok(userReservations);
         }
 
         [HttpGet("{id}/GuestReservations")]
-        [Authorize(Roles = "Admin")]
-        public ActionResult<List<AdminGuestReservationTableDto>> GetTableGuestReservations(int id, [FromQuery] DateTime? dateTime = null)
+     [Authorize(Roles = "Admin")]
+      public ActionResult<List<AdminGuestReservationTableDto>> GetTableGuestReservations(int id, [FromQuery] DateTime? dateTime = null)
         {
-            var table = _tableRepository.GetById(id);
-            if (table == null) return NotFound();
-
-            var query = table.GuestReservations.AsQueryable();
-            if (dateTime.HasValue)
+            var table = _tableService.GetTableById(id);
+    if (table == null)
             {
-                var d = dateTime.Value.Date;
-                query = query.Where(g => g.ReservationDate.Date == d);
+         return NotFound();
             }
 
-            var guestReservations = _mapper.Map<List<AdminGuestReservationTableDto>>(query.ToList());
-
-            if (guestReservations == null)
-            {
-                return NotFound();
-            }
-
-            return guestReservations;
-        }
+        var guestReservations = _tableService.GetTableGuestReservations(id, dateTime);
+      return Ok(guestReservations);
+   }
 
         [HttpGet("{id}/Occupancy")]
-
         [Authorize(Roles = "Admin")]
         public IActionResult GetTableOccupancy(int id, [FromQuery] DateTime dateTime)
         {
-            var countOfWorkingHours = WorkingHours.Hours.Length;
-
-            var userReservations = _tableRepository.GetById(id).UserReservations.Where(u => u.ReservationDate.Date == dateTime.Date).ToList();
-            var guestReservations = _tableRepository.GetById(id).GuestReservations.Where(g => g.ReservationDate.Date == dateTime.Date).ToList();
-
-            int countOfReservationsAtDate = userReservations.Count + guestReservations.Count;
-
-            var rate = ((double)countOfReservationsAtDate / countOfWorkingHours) * 100;
-
-            return new JsonResult(rate);
+            var rate = _tableService.GetTableOccupancy(id, dateTime);
+     return new JsonResult(rate);
         }
 
-
-        // POST api/<TableController>
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
+  [HttpPost]
+     [Authorize(Roles = "Admin")]
         public IActionResult CreateTable(TableDto tableDto)
-        {
-            if (tableDto == null || !ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+  {
+         if (tableDto == null || !ModelState.IsValid)
+    {
+       return BadRequest(ModelState);
+    }
 
-            var table = _mapper.Map<Table>(tableDto);
-
-            _tableRepository.Add(table);
-            return CreatedAtAction(nameof(GetTable), new { id = table.Id }, table);
+var table = _tableService.CreateTable(tableDto);
+        return CreatedAtAction(nameof(GetTable), new { id = table.Id }, table);
         }
 
-        // PUT api/<TableController>/5
-        [HttpPut("{id}")]
+      [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateTable(int id, TableDto tableDto)
-        {
+ {
             if (tableDto == null || !ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
+        {
+      return BadRequest(ModelState);
             }
-            var table = _tableRepository.GetById(id);
 
-            _mapper.Map(tableDto, table);
+            try
+            {
+      _tableService.UpdateTable(id, tableDto);
+    return NoContent();
+          }
+ catch (KeyNotFoundException)
+{
+      return NotFound();
+            }
+   }
 
-            _tableRepository.Update(table);
-
-            return NoContent();
-        }
-
-        // DELETE api/<TableController>/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public IActionResult Delete(int id)
-        {
-            if (_tableRepository.GetById(id) == null)
+      {
+   if (!_tableService.DeleteTable(id))
             {
-                return NotFound($"Table with ID {id} not found.");
+      return NotFound($"Table with ID {id} not found.");
             }
-
-            _tableRepository.Delete(id);
-            return NoContent();
+         return NoContent();
         }
     }
 }

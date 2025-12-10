@@ -16,12 +16,6 @@ namespace restaurant_reservation_api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            // Seed data can be added here if needed
-            // Example:
-            // builder.Entity<Table>().HasData(
-            //     new Table { Id = 1, Name = "Table 1", Capacity = 4 },
-            //     new Table { Id = 2, Name = "Table 2", Capacity = 2 }
-            // );
 
             builder.Entity<AppRole>().HasData(
                 new AppRole { Id = 1, Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "abc" },

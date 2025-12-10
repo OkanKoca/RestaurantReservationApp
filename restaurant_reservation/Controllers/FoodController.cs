@@ -1,13 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using restaurant_reservation.Data.Abstract;
-using restaurant_reservation.Dto;
-using restaurant_reservation.Models;
+using restaurant_reservation.Services.Abstract;
 using restaurant_reservation_api.Dto;
-using AutoMapper;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace restaurant_reservation.Controllers
 {
@@ -15,38 +9,30 @@ namespace restaurant_reservation.Controllers
     [ApiController]
     public class FoodController : ControllerBase
     {
-        private readonly IFoodRepository _foodRepository;
-        private readonly IMenuRepository _menuRepository;
-        private readonly IMapper _mapper;
+        private readonly IFoodService _foodService;
 
-        public FoodController(IFoodRepository foodRepository, IMenuRepository menuRepository, IMapper mapper)
+        public FoodController(IFoodService foodService)
         {
-            _foodRepository = foodRepository;
-            _menuRepository = menuRepository;
-            _mapper = mapper;
+            _foodService = foodService;
         }
 
         [HttpGet]
         public ActionResult<List<FoodDto>> GetAllFoods()
         {
-            var foods = _foodRepository.Foods()
-               .Include(f => f.Menu)
-                    .ToList();
-
-            return Ok(_mapper.Map<List<FoodDto>>(foods));
+            var foods = _foodService.GetAllFoods();
+            return Ok(foods);
         }
 
         // GET api/<foodController>/5
         [HttpGet("{id}")]
         public ActionResult<FoodDto> GetFood(int id)
         {
-            var food = _foodRepository.GetById(id);
+            var food = _foodService.GetFoodById(id);
             if (food == null)
             {
                 return NotFound();
             }
-
-            return Ok(_mapper.Map<FoodDto>(food));
+            return Ok(food);
         }
 
         // POST api/<foodController>
@@ -59,51 +45,38 @@ namespace restaurant_reservation.Controllers
                 return BadRequest(ModelState);
             }
 
-            var food = _mapper.Map<Food>(foodDto);
-
-            var menu = _menuRepository.Menus().FirstOrDefault(m => m.Id == food.MenuId);
-            if (menu != null)
-            {
-                food.Menu = menu;
-            }
-
-            _foodRepository.Add(food);
-
-            var createdFoodDto = _mapper.Map<FoodDto>(food);
-
-            return CreatedAtAction(nameof(GetFood), new { id = food.Id }, createdFoodDto);
+            var createdFood = _foodService.CreateFood(foodDto);
+            return CreatedAtAction(nameof(GetFood), new { id = createdFood.Id }, createdFood);
         }
 
         // PUT api/<foodController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult Updatefood(int id, FoodDto foodDto)
+        public IActionResult UpdateFood(int id, FoodDto foodDto)
         {
             if (foodDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var foodToUpdate = _foodRepository.GetById(id);
-            if (foodToUpdate == null)
+            try
+            {
+                _foodService.UpdateFood(id, foodDto);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            _mapper.Map(foodDto, foodToUpdate);
-            foodToUpdate.Menu = _menuRepository.GetById(foodDto.MenuId) ?? null;
-
-            _foodRepository.Update(foodToUpdate);
-
-            return NoContent();
         }
 
         // DELETE api/<foodController>/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
-            _foodRepository.Delete(id);
+            _foodService.DeleteFood(id);
+            return NoContent();
         }
     }
 }

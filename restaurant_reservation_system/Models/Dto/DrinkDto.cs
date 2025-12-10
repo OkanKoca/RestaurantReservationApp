@@ -1,6 +1,4 @@
-﻿using restaurant_reservation.Migrations;
-
-namespace restaurant_reservation_system.Models.Dto
+﻿namespace restaurant_reservation_system.Models.Dto
 {
     public class DrinkDto
     {

@@ -12,10 +12,10 @@ namespace restaurant_reservation.Data.Concrete
             _restaurantContext = restaurantContext;
         }
 
-        public void Add(Table table)
+        public async void Add(Table table)
         {
             _restaurantContext.Tables.Add(table);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
 
         public void Delete(int id)
@@ -47,10 +47,10 @@ namespace restaurant_reservation.Data.Concrete
                 ?? throw new KeyNotFoundException($"Table with number {number} not found.");
         }
 
-        public void Update(Table table)
+        public async void Update(Table table)
         {
             _restaurantContext.Tables.Update(table);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
     }
 }
