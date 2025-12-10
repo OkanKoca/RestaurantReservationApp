@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Models;
+using restaurant_reservation.Services.Abstract;
+using restaurant_reservation.Services.Concrete;
 using restaurant_reservation_api.Data;
 using restaurant_reservation_api.Hubs;
 using restaurant_reservation_api.Mapping;
@@ -12,7 +14,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+//Add services to the container.
 builder.Services.AddDbContext<RestaurantContext>(options => 
     options.UseSqlite("Data Source=restaurant_reservation"));
 
@@ -73,12 +75,22 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
+// Repositories
 builder.Services.AddScoped<ITableRepository, TableRepository>();
 builder.Services.AddScoped<IDrinkRepository, DrinkRepository>();
 builder.Services.AddScoped<IFoodRepository, FoodRepository>();
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<IGuestReservationRepository, GuestReservationRepository>();
 builder.Services.AddScoped<IUserReservationRepository, UserReservationRepository>();
+
+// Services
+builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<IDrinkService, DrinkService>();
+builder.Services.AddScoped<IFoodService, FoodService>();
+builder.Services.AddScoped<ITableService, TableService>();
+builder.Services.AddScoped<IUserReservationService, UserReservationService>();
+builder.Services.AddScoped<IGuestReservationService, GuestReservationService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

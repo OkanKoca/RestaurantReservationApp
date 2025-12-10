@@ -12,10 +12,10 @@ namespace restaurant_reservation.Data.Concrete
         public MenuRepository(RestaurantContext restaurantContext) { 
             _restaurantContext = restaurantContext;
         }
-        public void Add(Menu menu)
+        public async void Add(Menu menu)
         {
             _restaurantContext.Menus.Add(menu);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
         public Menu GetById(int id)
         {
@@ -30,7 +30,7 @@ namespace restaurant_reservation.Data.Concrete
 
             return menu;
         }
-        public void Update(Menu menu)
+        public async void Update(Menu menu)
         {
             if(menu == null)
             {
@@ -38,7 +38,7 @@ namespace restaurant_reservation.Data.Concrete
             }
 
             _restaurantContext.Menus.Update(menu);
-            _restaurantContext.SaveChanges();
+            await _restaurantContext.SaveChangesAsync();
         }
 
         public void Delete(int id)

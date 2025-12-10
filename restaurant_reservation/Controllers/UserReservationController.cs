@@ -1,20 +1,13 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using restaurant_reservation.Data.Abstract;
-using restaurant_reservation.Data.Concrete;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
+using restaurant_reservation.Services.Abstract;
 using restaurant_reservation_api.Dto;
 using restaurant_reservation_api.Hubs;
-using System.Collections.Generic;
 using System.Security.Claims;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace restaurant_reservation.Controllers
 {
@@ -22,75 +15,40 @@ namespace restaurant_reservation.Controllers
     [ApiController]
     public class UserReservationController : ControllerBase
     {
-        private readonly IUserReservationRepository _userReservationRepository;
-        private readonly ITableRepository _tableRepository;
+        private readonly IUserReservationService _userReservationService;
         private readonly UserManager<AppUser> _userManager;
         private readonly IHubContext<AdminHub> _hubContext;
-        private readonly IMapper _mapper;
-        public UserReservationController(IUserReservationRepository userReservationRepository,
-            ITableRepository tableRepository, UserManager<AppUser> userManager, IHubContext<AdminHub> hubContext,
-            IMapper mapper)
+
+        public UserReservationController(
+            IUserReservationService userReservationService,
+            UserManager<AppUser> userManager,
+            IHubContext<AdminHub> hubContext)
         {
-            _userReservationRepository = userReservationRepository;
-            _tableRepository = tableRepository;
+            _userReservationService = userReservationService;
             _userManager = userManager;
             _hubContext = hubContext;
-            _mapper = mapper;
         }
-        // GET: api/<UserReservationController>
+
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public List<AdminUserReservationDto> GetAllUserReservations()
+        public ActionResult<List<AdminUserReservationDto>> GetAllUserReservations()
         {
-            List<AdminUserReservationDto> userReservations = new List<AdminUserReservationDto>();
-
-            foreach (var reservation in _userReservationRepository.UserReservations().ToList())
-            {
-                if (reservation.Customer == null)
-                {
-                    continue;
-                }
-
-                if (isOutdated(reservation.Id))
-                {
-                    reservation.Status = ReservationStatus.Outdated.ToString();
-                    _userReservationRepository.Update(reservation);
-                }
-
-                var reservationDto = _mapper.Map<AdminUserReservationDto>(reservation);
-
-                userReservations.Add(reservationDto);
-            }
-
-            return userReservations;
-        }
-        private bool isOutdated(int id)
-        {
-            var reservation = _userReservationRepository.GetById(id);
-
-            if (reservation == null)
-            {
-                return false;
-            }
-
-            if (reservation.ReservationDate < DateTime.UtcNow.ToLocalTime())
-            {
-                return true;
-            }
-
-            return false;
+            var reservations = _userReservationService.GetAllUserReservations();
+            return Ok(reservations);
         }
 
-        // GET api/<UserReservationController>/5
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
-        public UserReservation GetUserReservation(int id)
+        public ActionResult<UserReservation> GetUserReservation(int id)
         {
-            return _userReservationRepository.GetById(id);
+            var reservation = _userReservationService.GetUserReservationById(id);
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+            return Ok(reservation);
         }
 
-
-        // POST api/<UserReservationController>
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post(UserReservationDto userReservationDto)
@@ -105,55 +63,25 @@ namespace restaurant_reservation.Controllers
                 return BadRequest(ModelState);
             }
 
-            var requestedDate = userReservationDto.ReservationDate.Date;
-            var requestedHour = int.Parse(userReservationDto.ReservationHour.Split(':')[0]);
+            var result = await _userReservationService.CreateUserReservationAsync(userReservationDto);
 
-
-            var available_tables = await _tableRepository.Tables()
-                .Where(table => !table.GuestReservations.Any(r =>
-                    r.ReservationDate.Date == requestedDate &&
-                    r.ReservationDate.Hour == requestedHour) &&
-                    !table.UserReservations.Any(r =>
-                    r.ReservationDate.Date == requestedDate &&
-                    r.ReservationDate.Hour == requestedHour))
-                .ToListAsync();
-
-
-            if (!available_tables.Any())
+            if (!result.Success)
             {
-                return BadRequest("No available tables for the requested date and time.");
+                return BadRequest(result.ErrorMessage);
             }
 
-            var table = available_tables.First();
-
-            DateTime requestedDateWithHour = new DateTime(requestedDate.Year, requestedDate.Month, requestedDate.Day, requestedHour, 0, 0);
-
-            var customer = await _userManager.FindByIdAsync(userReservationDto.CustomerId.ToString());
-
-            var userReservation = new UserReservation
-            {
-                Customer = customer,
-                NumberOfGuests = userReservationDto.NumberOfGuests,
-                ReservationDate = requestedDateWithHour,
-                TableId = table.Id,
-                Table = table,
-                CreatedAt = DateTime.UtcNow,
-            };
-
-            _userReservationRepository.Add(userReservation);
-
+            var reservation = result.Reservation!;
             await _hubContext.Clients.All.SendAsync("NewReservation", new
             {
-                ReservationTable = table.Number,
-                CustomerName = $"{userReservation.Customer.FirstName} {userReservation.Customer.LastName}",
-                ReservationDate = userReservation.ReservationDate.ToShortDateString(),
-                ReservationHour = userReservation.ReservationDate.ToShortTimeString()
+                ReservationTable = reservation.Table!.Number,
+                CustomerName = $"{reservation.Customer!.FirstName} {reservation.Customer.LastName}",
+                ReservationDate = reservation.ReservationDate.ToShortDateString(),
+                ReservationHour = reservation.ReservationDate.ToShortTimeString()
             });
 
-            return CreatedAtAction(nameof(GetUserReservation), new { id = userReservation.Id }, userReservationDto);
+            return CreatedAtAction(nameof(GetUserReservation), new { id = reservation.Id }, userReservationDto);
         }
 
-        // PUT api/<UserReservationController>/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateReservation(int id, UserReservationDto userReservationDto)
@@ -163,50 +91,25 @@ namespace restaurant_reservation.Controllers
                 return BadRequest("Invalid reservation data.");
             }
 
-            var existingReservation = _userReservationRepository.GetById(id);
-
-            if (existingReservation == null)
+            try
             {
-                return NotFound($"User reservation with ID {id} not found.");
+                _userReservationService.UpdateUserReservation(id, userReservationDto);
+                return NoContent();
             }
-
-            existingReservation.NumberOfGuests = userReservationDto.NumberOfGuests;
-            existingReservation.ReservationDate = userReservationDto.ReservationDate;
-            existingReservation.ReservationDate = new DateTime(existingReservation.ReservationDate.Year, existingReservation.ReservationDate.Month, existingReservation.ReservationDate.Day, int.Parse(userReservationDto.ReservationHour.Split(':')[0]), 0, 0);
-            existingReservation.Status = userReservationDto.Status;
-
-            existingReservation.Table.UserReservations.Remove(existingReservation);
-
-            existingReservation.Table.UserReservations.Add(existingReservation);
-
-            _userReservationRepository.Update(existingReservation);
-
-            return NoContent();
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateReservationStatus(int id)
         {
-
-            var existingReservation = _userReservationRepository.GetById(id);
-
-            if (existingReservation == null)
+            if (!_userReservationService.ToggleReservationStatus(id))
             {
                 return NotFound($"User reservation with ID {id} not found.");
             }
-
-            if (existingReservation.Status == ReservationStatus.Confirmed.ToString())
-            {
-                existingReservation.Status = ReservationStatus.Pending.ToString();
-            }
-            else if (existingReservation.Status == ReservationStatus.Pending.ToString())
-            {
-                existingReservation.Status = ReservationStatus.Confirmed.ToString();
-            }
-
-            _userReservationRepository.Update(existingReservation);
-
             return NoContent();
         }
 
@@ -220,18 +123,10 @@ namespace restaurant_reservation.Controllers
                 return Unauthorized();
 
             var user = await _userManager.FindByIdAsync(userId);
-
-
             if (user == null)
                 return NotFound();
 
-            var reservationsDb = await _userReservationRepository.UserReservations()
-                .Where(r => r.Customer.Id == int.Parse(userId))
-                .Include(r => r.Table)
-                .ToListAsync();
-
-            var reservations = _mapper.Map<List<UserReservationDto>>(reservationsDb);
-
+            var reservations = await _userReservationService.GetUserReservationsAsync(int.Parse(userId));
 
             return Ok(new
             {
@@ -254,53 +149,46 @@ namespace restaurant_reservation.Controllers
                 return Unauthorized();
 
             var user = await _userManager.FindByIdAsync(userId);
-
             if (user == null)
                 return NotFound();
 
-            var reservationToCancel = _userReservationRepository.UserReservations()
-            .Where(r => r.Customer.Id == int.Parse(userId))
-            .Include(r => r.Table)
-            .FirstOrDefault(r => r.Id == id);
+            var result = await _userReservationService.CancelUserReservationAsync(id, int.Parse(userId));
 
-            if (reservationToCancel == null)
+            if (!result.Success)
             {
                 return NotFound();
             }
 
-            _userReservationRepository.Delete(id);
-
+            var reservation = result.Reservation!;
             await _hubContext.Clients.All.SendAsync("ReservationCanceled", new
             {
-                ReservationTable = reservationToCancel.Table.Number,
-                CustomerName = $"{reservationToCancel.Customer.FirstName} {reservationToCancel.Customer.LastName}",
-                ReservationDate = reservationToCancel.ReservationDate.ToShortDateString(),
-                ReservationHour = reservationToCancel.ReservationDate.ToShortTimeString()
+                ReservationTable = reservation.Table!.Number,
+                CustomerName = $"{reservation.Customer!.FirstName} {reservation.Customer.LastName}",
+                ReservationDate = reservation.ReservationDate.ToShortDateString(),
+                ReservationHour = reservation.ReservationDate.ToShortTimeString()
             });
 
             return NoContent();
         }
 
-        // DELETE api/<UserReservationController>/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var userReservation = _userReservationRepository.GetById(id);
+            var result = _userReservationService.DeleteUserReservation(id);
 
-            if (userReservation == null)
+            if (!result.Success)
             {
-                return NotFound($"Guest reservation with ID {id} not found.");
+                return NotFound($"User reservation with ID {id} not found.");
             }
 
-            _userReservationRepository.Delete(id);
-
+            var reservation = result.Reservation!;
             await _hubContext.Clients.All.SendAsync("ReservationCanceled", new
             {
-                ReservationTable = userReservation.Table.Number,
-                CustomerName = $"{userReservation.Customer.FirstName} {userReservation.Customer.LastName}",
-                ReservationDate = userReservation.ReservationDate.ToShortDateString(),
-                ReservationHour = userReservation.ReservationDate.ToShortTimeString()
+                ReservationTable = reservation.Table!.Number,
+                CustomerName = $"{reservation.Customer!.FirstName} {reservation.Customer.LastName}",
+                ReservationDate = reservation.ReservationDate.ToShortDateString(),
+                ReservationHour = reservation.ReservationDate.ToShortTimeString()
             });
 
             return NoContent();
