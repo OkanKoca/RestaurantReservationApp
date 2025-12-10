@@ -104,9 +104,9 @@ namespace restaurant_reservation.Controllers
 
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Admin")]
-        public IActionResult UpdateReservationStatus(int id)
+        public async Task<IActionResult> UpdateReservationStatus(int id)
         {
-            if (!_userReservationService.ToggleReservationStatus(id))
+            if (!await _userReservationService.ToggleReservationStatusAsync(id))
             {
                 return NotFound($"User reservation with ID {id} not found.");
             }

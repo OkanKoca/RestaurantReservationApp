@@ -10,6 +10,7 @@ using restaurant_reservation.Services.Concrete;
 using restaurant_reservation_api.Data;
 using restaurant_reservation_api.Hubs;
 using restaurant_reservation_api.Mapping;
+using restaurant_reservation_api.Messaging;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = "localhost:6379";
     options.InstanceName = "RestaurantReservation_";
 });
+
+// ?? RabbitMQ Services
+builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
+builder.Services.AddHostedService<EmailConsumerService>();
 
 builder.Services.AddIdentity<AppUser, AppRole>()
    .AddEntityFrameworkStores<RestaurantContext>(); // This line requires the above using directive  

@@ -5,6 +5,7 @@ using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation.Services.Concrete;
+using restaurant_reservation_api.Messaging;
 
 namespace restaurant_reservation.Tests.Services;
 
@@ -14,6 +15,7 @@ public class UserReservationServiceTests
     private readonly Mock<ITableRepository> _tableRepositoryMock;
     private readonly Mock<UserManager<AppUser>> _userManagerMock;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<IRabbitMQPublisher> _rabbitMQPublisherMock;
     private readonly UserReservationService _service;
 
     public UserReservationServiceTests()
@@ -21,6 +23,7 @@ public class UserReservationServiceTests
         _userReservationRepositoryMock = new Mock<IUserReservationRepository>();
         _tableRepositoryMock = new Mock<ITableRepository>();
         _mapperMock = new Mock<IMapper>();
+        _rabbitMQPublisherMock = new Mock<IRabbitMQPublisher>();
 
         var store = new Mock<IUserStore<AppUser>>();
         _userManagerMock = new Mock<UserManager<AppUser>>(
@@ -30,7 +33,8 @@ public class UserReservationServiceTests
             _userReservationRepositoryMock.Object,
             _tableRepositoryMock.Object,
             _userManagerMock.Object,
-            _mapperMock.Object);
+            _mapperMock.Object,
+            _rabbitMQPublisherMock.Object);
     }
 
     [Fact]
@@ -39,16 +43,16 @@ public class UserReservationServiceTests
         // Arrange
         var dto = new UserReservationDto
         {
-            CustomerId =1,
+            CustomerId = 1,
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =2,
+            NumberOfGuests = 2,
             ReservationHour = "19:00"
         };
 
         var table = new Table
         {
-            Id =10,
-            Number =5,
+            Id = 10,
+            Number = 5,
             GuestReservations = new List<GuestReservation>(),
             UserReservations = new List<UserReservation>()
         };
@@ -61,7 +65,7 @@ public class UserReservationServiceTests
 
         var customer = new AppUser
         {
-            Id =1,
+            Id = 1,
             FirstName = "John",
             LastName = "Doe",
             Email = "john@example.com",
@@ -78,7 +82,7 @@ public class UserReservationServiceTests
             .Callback<UserReservation>(r => capturedReservation = r);
 
         // Act
-        var(success, errorMessage, reservation) = await _service.CreateUserReservationAsync(dto);
+        var (success, errorMessage, reservation) = await _service.CreateUserReservationAsync(dto);
 
         // Assert
         Assert.True(success);
@@ -99,9 +103,9 @@ public class UserReservationServiceTests
         // Arrange
         var dto = new UserReservationDto
         {
-            CustomerId =1,
+            CustomerId = 1,
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =2,
+            NumberOfGuests = 2,
             ReservationHour = "19:00"
         };
 
@@ -112,7 +116,7 @@ public class UserReservationServiceTests
             .Returns(tables);
 
         // Act
-        var(success, errorMessage, reservation) = await _service.CreateUserReservationAsync(dto);
+        var (success, errorMessage, reservation) = await _service.CreateUserReservationAsync(dto);
 
         // Assert
         Assert.False(success);
@@ -127,11 +131,11 @@ public class UserReservationServiceTests
         // Arrange
         var reservation = new UserReservation
         {
-            Id =1,
-            NumberOfGuests =2,
+            Id = 1,
+            NumberOfGuests = 2,
             ReservationDate = DateTime.UtcNow,
-            Customer = new AppUser { Id =1, UserName = "john" },
-            Table = new Table { Id =1, Number =5 }
+            Customer = new AppUser { Id = 1, UserName = "john" },
+            Table = new Table { Id = 1, Number = 5 }
         };
 
         _userReservationRepositoryMock
@@ -169,7 +173,7 @@ public class UserReservationServiceTests
         var dto = new UserReservationDto
         {
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =3,
+            NumberOfGuests = 3,
             ReservationHour = "20:00",
             Status = ReservationStatus.Pending.ToString()
         };
@@ -185,13 +189,13 @@ public class UserReservationServiceTests
         // Arrange
         var existing = new UserReservation
         {
-            Id =1,
-            NumberOfGuests =2,
+            Id = 1,
+            NumberOfGuests = 2,
             ReservationDate = DateTime.Today,
             Status = ReservationStatus.Pending.ToString(),
             Table = new Table
             {
-                Id =1,
+                Id = 1,
                 UserReservations = new List<UserReservation>(),
                 GuestReservations = new List<GuestReservation>()
             }
@@ -202,7 +206,7 @@ public class UserReservationServiceTests
         var dto = new UserReservationDto
         {
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =4,
+            NumberOfGuests = 4,
             ReservationHour = "21:00",
             Status = ReservationStatus.Confirmed.ToString()
         };
@@ -224,15 +228,15 @@ public class UserReservationServiceTests
     }
 
     [Fact]
-    public void ToggleReservationStatus_NotFound_ReturnsFalse()
+    public async Task ToggleReservationStatusAsync_NotFound_ReturnsFalse()
     {
         // Arrange
         _userReservationRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<int>()))
-            .Returns((UserReservation?)null!);
+           .Setup(r => r.GetById(It.IsAny<int>()))
+                 .Returns((UserReservation?)null!);
 
         // Act
-        var result = _service.ToggleReservationStatus(1);
+        var result = await _service.ToggleReservationStatusAsync(1);
 
         // Assert
         Assert.False(result);
@@ -240,53 +244,65 @@ public class UserReservationServiceTests
     }
 
     [Fact]
-    public void ToggleReservationStatus_PendingToConfirmed_UpdatesStatusAndReturnsTrue()
+    public async Task ToggleReservationStatusAsync_PendingToConfirmed_UpdatesStatusAndReturnsTrue()
     {
         // Arrange
+        var customer = new AppUser
+        {
+            Id = 1,
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "john@example.com",
+            UserName = "john"
+        };
+
         var reservation = new UserReservation
         {
-            Id =1,
+            Id = 1,
             Status = ReservationStatus.Pending.ToString(),
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =2
+            NumberOfGuests = 2,
+            Customer = customer
         };
 
         _userReservationRepositoryMock
             .Setup(r => r.GetById(reservation.Id))
-            .Returns(reservation);
+     .Returns(reservation);
 
         // Act
-        var result = _service.ToggleReservationStatus(reservation.Id);
+        var result = await _service.ToggleReservationStatusAsync(reservation.Id);
 
         // Assert
         Assert.True(result);
         Assert.Equal(ReservationStatus.Confirmed.ToString(), reservation.Status);
         _userReservationRepositoryMock.Verify(r => r.Update(reservation), Times.Once);
+        _rabbitMQPublisherMock.Verify(p => p.PublishEmailAsync(It.IsAny<EmailMessage>()), Times.Once);
     }
 
     [Fact]
-    public void ToggleReservationStatus_ConfirmedToPending_UpdatesStatusAndReturnsTrue()
+    public async Task ToggleReservationStatusAsync_ConfirmedToPending_UpdatesStatusAndReturnsTrue()
     {
         // Arrange
         var reservation = new UserReservation
         {
-            Id =1,
+            Id = 1,
             Status = ReservationStatus.Confirmed.ToString(),
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =2
+            NumberOfGuests = 2
         };
 
         _userReservationRepositoryMock
-            .Setup(r => r.GetById(reservation.Id))
-            .Returns(reservation);
+        .Setup(r => r.GetById(reservation.Id))
+           .Returns(reservation);
 
         // Act
-        var result = _service.ToggleReservationStatus(reservation.Id);
+        var result = await _service.ToggleReservationStatusAsync(reservation.Id);
 
         // Assert
         Assert.True(result);
         Assert.Equal(ReservationStatus.Pending.ToString(), reservation.Status);
         _userReservationRepositoryMock.Verify(r => r.Update(reservation), Times.Once);
+        _rabbitMQPublisherMock.Verify(p => p.PublishEmailAsync(It.IsAny<EmailMessage>()), Times.Never);
     }
 
     [Fact]
@@ -298,7 +314,7 @@ public class UserReservationServiceTests
             .Returns((UserReservation?)null!);
 
         // Act
-        var(success, reservation) = _service.DeleteUserReservation(1);
+        var (success, reservation) = _service.DeleteUserReservation(1);
 
         // Assert
         Assert.False(success);
@@ -312,9 +328,9 @@ public class UserReservationServiceTests
         // Arrange
         var reservation = new UserReservation
         {
-            Id =1,
+            Id = 1,
             ReservationDate = DateTime.Today.AddDays(1),
-            NumberOfGuests =2
+            NumberOfGuests = 2
         };
 
         _userReservationRepositoryMock
@@ -322,7 +338,7 @@ public class UserReservationServiceTests
             .Returns(reservation);
 
         // Act
-        var(success, deletedReservation) = _service.DeleteUserReservation(reservation.Id);
+        var (success, deletedReservation) = _service.DeleteUserReservation(reservation.Id);
 
         // Assert
         Assert.True(success);

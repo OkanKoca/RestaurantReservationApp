@@ -6,6 +6,7 @@ using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation.Services.Abstract;
 using restaurant_reservation_api.Dto;
+using restaurant_reservation_api.Messaging;
 
 namespace restaurant_reservation.Services.Concrete
 {
@@ -15,17 +16,20 @@ namespace restaurant_reservation.Services.Concrete
         private readonly ITableRepository _tableRepository;
         private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
+        private readonly IRabbitMQPublisher _rabbitMQPublisher;
 
         public UserReservationService(
             IUserReservationRepository userReservationRepository,
             ITableRepository tableRepository,
             UserManager<AppUser> userManager,
-            IMapper mapper)
+            IMapper mapper,
+            IRabbitMQPublisher rabbitMQPublisher)
         {
             _userReservationRepository = userReservationRepository;
             _tableRepository = tableRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _rabbitMQPublisher = rabbitMQPublisher;
         }
 
         public List<AdminUserReservationDto> GetAllUserReservations()
@@ -95,6 +99,24 @@ namespace restaurant_reservation.Services.Concrete
 
             _userReservationRepository.Add(userReservation);
 
+            // RabbitMQ ile email bildirimi gönder
+            if (customer?.Email != null)
+            {
+                var emailMessage = new EmailMessage
+                {
+                    To = customer.Email,
+                    Subject = "Rezervasyonunuz Oluþturuldu!",
+                    Body = $"Sayýn {customer.FullName},\n\n" +
+                           $"Rezervasyonunuz baþarýyla oluþturuldu!\n\n" +
+                           $"Tarih: {requestedDateWithHour:dd.MM.yyyy}\n" +
+                           $"Saat: {requestedDateWithHour:HH:mm}\n" +
+                           $"Kiþi Sayýsý: {dto.NumberOfGuests}\n" +
+                           $"Masa No: {table.Id}\n\n" +
+                           $"Bizi tercih ettiðiniz için teþekkür ederiz!"
+                };
+                await _rabbitMQPublisher.PublishEmailAsync(emailMessage);
+            }
+
             return (true, null, userReservation);
         }
 
@@ -121,7 +143,7 @@ namespace restaurant_reservation.Services.Concrete
             _userReservationRepository.Update(existingReservation);
         }
 
-        public bool ToggleReservationStatus(int id)
+        public async Task<bool> ToggleReservationStatusAsync(int id)
         {
             var existingReservation = _userReservationRepository.GetById(id);
             if (existingReservation == null)
@@ -132,10 +154,45 @@ namespace restaurant_reservation.Services.Concrete
             if (existingReservation.Status == ReservationStatus.Confirmed.ToString())
             {
                 existingReservation.Status = ReservationStatus.Pending.ToString();
+
+                if (existingReservation.Customer?.Email != null)
+                {
+                    var emailMessage = new EmailMessage
+                    {
+                        To = existingReservation.Customer.Email,
+                        Subject = "Rezervasyonunuz Onayýnýz Ýptal Edildi!",
+                        Body = $"Sayýn {existingReservation.Customer.FullName},\n\n" +
+                               $"Rezervasyonunuz yönetici tarafýndan onayýnýz iptal edildi.\n\n" +
+                               $"Tarih: {existingReservation.ReservationDate:dd.MM.yyyy}\n" +
+                               $"Saat: {existingReservation.ReservationDate:HH:mm}\n" +
+                               $"Kiþi Sayýsý: {existingReservation.NumberOfGuests}\n" +
+                               $"Masa No: {existingReservation.TableId}\n\n" +
+                               $"Sorun olduðunu düþünüyorsanýz bizimle iletiþime geçebilirsiniz."
+                    };
+                    await _rabbitMQPublisher.PublishEmailAsync(emailMessage);
+                }
             }
             else if (existingReservation.Status == ReservationStatus.Pending.ToString())
             {
                 existingReservation.Status = ReservationStatus.Confirmed.ToString();
+
+                // Rezervasyon onaylandýðýnda email gönder
+                if (existingReservation.Customer?.Email != null)
+                {
+                    var emailMessage = new EmailMessage
+                    {
+                        To = existingReservation.Customer.Email,
+                        Subject = "Rezervasyonunuz Onaylandý!",
+                        Body = $"Sayýn {existingReservation.Customer.FullName},\n\n" +
+                               $"Rezervasyonunuz yönetici tarafýndan onaylandý!\n\n" +
+                               $"Tarih: {existingReservation.ReservationDate:dd.MM.yyyy}\n" +
+                               $"Saat: {existingReservation.ReservationDate:HH:mm}\n" +
+                               $"Kiþi Sayýsý: {existingReservation.NumberOfGuests}\n" +
+                               $"Masa No: {existingReservation.TableId}\n\n" +
+                               $"Sizi aðýrlamak için sabýrsýzlanýyoruz!"
+                    };
+                    await _rabbitMQPublisher.PublishEmailAsync(emailMessage);
+                }
             }
 
             _userReservationRepository.Update(existingReservation);

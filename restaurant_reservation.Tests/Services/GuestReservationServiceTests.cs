@@ -4,6 +4,7 @@ using restaurant_reservation.Data.Abstract;
 using restaurant_reservation.Dto;
 using restaurant_reservation.Models;
 using restaurant_reservation.Services.Concrete;
+using restaurant_reservation_api.Messaging;
 using restaurant_reservation_api.Models;
 
 namespace restaurant_reservation.Tests.Services;
@@ -13,6 +14,7 @@ public class GuestReservationServiceTests
     private readonly Mock<IGuestReservationRepository> _guestReservationRepositoryMock;
     private readonly Mock<ITableRepository> _tableRepositoryMock;
     private readonly Mock<IUserReservationRepository> _userReservationRepositoryMock;
+    private readonly Mock<IRabbitMQPublisher> _rabbitMQPublisherMock;
     private readonly GuestReservationService _service;
 
     public GuestReservationServiceTests()
@@ -20,11 +22,13 @@ public class GuestReservationServiceTests
         _guestReservationRepositoryMock = new Mock<IGuestReservationRepository>();
         _tableRepositoryMock = new Mock<ITableRepository>();
         _userReservationRepositoryMock = new Mock<IUserReservationRepository>();
+        _rabbitMQPublisherMock = new Mock<IRabbitMQPublisher>();
 
         _service = new GuestReservationService(
             _guestReservationRepositoryMock.Object,
             _tableRepositoryMock.Object,
-            _userReservationRepositoryMock.Object);
+            _userReservationRepositoryMock.Object,
+            _rabbitMQPublisherMock.Object);
     }
 
     [Fact]
@@ -44,7 +48,7 @@ public class GuestReservationServiceTests
         var tablesQueryable = new List<Table>().AsQueryable();
 
         _tableRepositoryMock
-            .Setup(r => r.Tables())
+   .Setup(r => r.Tables())
             .Returns(tablesQueryable);
 
         // Act
@@ -85,7 +89,7 @@ public class GuestReservationServiceTests
 
         GuestReservation? capturedReservation = null;
         _guestReservationRepositoryMock
-            .Setup(r => r.Add(It.IsAny<GuestReservation>()))
+         .Setup(r => r.Add(It.IsAny<GuestReservation>()))
             .Callback<GuestReservation>(r => capturedReservation = r);
 
         // Act
@@ -107,15 +111,15 @@ public class GuestReservationServiceTests
     }
 
     [Fact]
-    public void ToggleReservationStatus_ReservationNotFound_ReturnsFalse()
+    public async Task ToggleReservationStatusAsync_ReservationNotFound_ReturnsFalse()
     {
         // Arrange
         _guestReservationRepositoryMock
             .Setup(r => r.GetById(It.IsAny<int>()))
-            .Returns((GuestReservation?)null!);
+   .Returns((GuestReservation?)null!);
 
         // Act
-        var result = _service.ToggleReservationStatus(1);
+        var result = await _service.ToggleReservationStatusAsync(1);
 
         // Assert
         Assert.False(result);
@@ -123,7 +127,7 @@ public class GuestReservationServiceTests
     }
 
     [Fact]
-    public void ToggleReservationStatus_PendingToConfirmed_UpdatesStatusAndReturnsTrue()
+    public async Task ToggleReservationStatusAsync_PendingToConfirmed_UpdatesStatusSendsEmailAndReturnsTrue()
     {
         // Arrange
         var reservation = new GuestReservation
@@ -136,20 +140,21 @@ public class GuestReservationServiceTests
         };
 
         _guestReservationRepositoryMock
-            .Setup(r => r.GetById(reservation.Id))
-            .Returns(reservation);
+          .Setup(r => r.GetById(reservation.Id))
+       .Returns(reservation);
 
         // Act
-        var result = _service.ToggleReservationStatus(reservation.Id);
+        var result = await _service.ToggleReservationStatusAsync(reservation.Id);
 
         // Assert
         Assert.True(result);
         Assert.Equal(ReservationStatus.Confirmed.ToString(), reservation.Status);
         _guestReservationRepositoryMock.Verify(r => r.Update(reservation), Times.Once);
+        _rabbitMQPublisherMock.Verify(p => p.PublishEmailAsync(It.IsAny<EmailMessage>()), Times.Once);
     }
 
     [Fact]
-    public void ToggleReservationStatus_ConfirmedToPending_UpdatesStatusAndReturnsTrue()
+    public async Task ToggleReservationStatusAsync_ConfirmedToPending_UpdatesStatusSendsEmailAndReturnsTrue()
     {
         // Arrange
         var reservation = new GuestReservation
@@ -166,12 +171,13 @@ public class GuestReservationServiceTests
             .Returns(reservation);
 
         // Act
-        var result = _service.ToggleReservationStatus(reservation.Id);
+        var result = await _service.ToggleReservationStatusAsync(reservation.Id);
 
         // Assert
         Assert.True(result);
         Assert.Equal(ReservationStatus.Pending.ToString(), reservation.Status);
         _guestReservationRepositoryMock.Verify(r => r.Update(reservation), Times.Once);
+        _rabbitMQPublisherMock.Verify(p => p.PublishEmailAsync(It.IsAny<EmailMessage>()), Times.Once);
     }
 
     [Fact]
@@ -179,7 +185,7 @@ public class GuestReservationServiceTests
     {
         // Arrange
         _guestReservationRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<int>()))
+         .Setup(r => r.GetById(It.IsAny<int>()))
             .Returns((GuestReservation?)null!);
 
         // Act
@@ -204,8 +210,8 @@ public class GuestReservationServiceTests
         };
 
         _guestReservationRepositoryMock
-            .Setup(r => r.GetById(reservation.Id))
-            .Returns(reservation);
+              .Setup(r => r.GetById(reservation.Id))
+              .Returns(reservation);
 
         // Act
         var (success, deletedReservation) = _service.DeleteGuestReservation(reservation.Id);
@@ -229,8 +235,8 @@ public class GuestReservationServiceTests
         };
 
         _guestReservationRepositoryMock
-            .Setup(r => r.GetById(reservation.Id))
-            .Returns(reservation);
+         .Setup(r => r.GetById(reservation.Id))
+        .Returns(reservation);
 
         // Act
         var result = _service.GetGuestReservationById(reservation.Id);

@@ -2,7 +2,9 @@
 @using restaurant_reservation_system.Models.Dto
 @using restaurant_reservation_system.Models.ViewModel
 @{
-    ViewData["Title"] = "Reservations"; 
+    ViewData["Title"] = "Reservations";
+    int userIndex = 1;
+    int guestIndex = 1;
 }
 
 @model AdminReservationsViewModel
@@ -20,9 +22,6 @@
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        @{
-            int i = 1;
-        }
         @foreach (var userReservation in Model.UserReservations)
         {
             <div class="col" data-reservation>
@@ -44,8 +43,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">User Reservation #@i</h5>
-
+                        <h5 class="card-title">User Reservation #@userIndex</h5>
                         <div class="mb-3">
                             <span class="ms-2">@userReservation.CustomerName</span>
                         </div>
@@ -55,7 +53,6 @@
                         <div class="mb-3">
                             <span class="ms-2">@userReservation.CustomerPhone</span>
                         </div>
-
                         <div class="mb-3">
                             <span class="ms-2">@userReservation.ReservationDateLocal.ToShortDateString()</span>
                         </div>
@@ -68,19 +65,17 @@
                         <div class="text-muted small">
                             <span class="ms-2">Created: @userReservation.CreatedAtLocal.ToShortDateString() @userReservation.CreatedAtLocal.ToShortTimeString()</span>
                         </div>
-
                         <br />
                         <form asp-controller="Admin" asp-action="DeleteUserReservation" method="post" style="display: inline;" id="deleteForm_@userReservation.Id">
                             <input type="hidden" name="id" value="@userReservation.Id" />
-                            <button type="button" class="btn-outline-primary btn-sm" onclick="showDeleteModal(@userReservation.Id)">Delete</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal(@userReservation.Id)">Delete</button>
                         </form>
-
                         @if (userReservation.Status == "Pending")
                         {
                             <form asp-controller="Admin" asp-action="UpdateUserReservationStatus" method="post" style="display: inline;" id="confirmForm_@userReservation.Id">
                                 <input type="hidden" name="id" value="@userReservation.Id" />
                                 <input type="hidden" name="status" value="Confirmed" />
-                                <button type="button" class="btn-outline-primary btn-sm" onclick="showConfirmModal(@userReservation.Id)">Confirm Reservation</button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="showConfirmModal(@userReservation.Id)">Confirm</button>
                             </form>
                         }
                         else if (userReservation.Status == "Confirmed")
@@ -88,18 +83,15 @@
                             <form asp-controller="Admin" asp-action="UpdateUserReservationStatus" method="post" style="display: inline;" id="cancelForm_@userReservation.Id">
                                 <input type="hidden" name="id" value="@userReservation.Id" />
                                 <input type="hidden" name="status" value="Pending" />
-                                <button type="button" class="btn-outline-primary btn-sm" onclick="showCancelConfirmationModal(@userReservation.Id)">Cancel Confirmation</button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="showCancelConfirmationModal(@userReservation.Id)">Cancel</button>
                             </form>
                         }
                     </div>
                 </div>
             </div>
+            userIndex++;
+        }
 
-            i++;
-        }
-        @{
-            i = 1;
-        }
         @foreach (var guestReservation in Model.GuestReservations)
         {
             <div class="col" data-reservation>
@@ -120,9 +112,8 @@
                             }
                         </div>
                     </div>
-                    <div class="card-body" @(string.Equals(guestReservation.Status, "Outdated") ? "bg-secondary" : "bg-white")>
-                        <h5 class="card-title">Guest Reservation #@i</h5>
-
+                    <div class="card-body">
+                        <h5 class="card-title">Guest Reservation #@guestIndex</h5>
                         <div class="mb-3">
                             <span class="ms-2">@guestReservation.FullName</span>
                         </div>
@@ -132,7 +123,6 @@
                         <div class="mb-3">
                             <span class="ms-2">@guestReservation.PhoneNumber</span>
                         </div>
-
                         <div class="mb-3">
                             <span class="ms-2">@guestReservation.ReservationDateLocal.ToShortDateString()</span>
                         </div>
@@ -145,19 +135,17 @@
                         <div class="text-muted small">
                             <span class="ms-2">Created: @guestReservation.CreatedAtLocal.ToShortDateString() @guestReservation.CreatedAtLocal.ToShortTimeString()</span>
                         </div>
-
                         <br />
-                        <form asp-controller="Admin" asp-action="DeleteGuestReservation" method="post" style="display: inline;" id = "deleteForm_@guestReservation.Id">
+                        <form asp-controller="Admin" asp-action="DeleteGuestReservation" method="post" style="display: inline;" id="deleteForm_@guestReservation.Id">
                             <input type="hidden" name="id" value="@guestReservation.Id" />
-                            <button type="button" class="btn-outline-primary btn-sm" onclick="showDeleteModal(@guestReservation.Id)">Delete</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal(@guestReservation.Id)">Delete</button>
                         </form>
-
                         @if (guestReservation.Status == "Pending")
                         {
                             <form asp-controller="Admin" asp-action="UpdateGuestReservationStatus" method="post" style="display: inline;" id="confirmForm_@guestReservation.Id">
                                 <input type="hidden" name="id" value="@guestReservation.Id" />
                                 <input type="hidden" name="status" value="Confirmed" />
-                                <button type="button" class="btn-outline-primary btn-sm" onclick="showConfirmModal(@guestReservation.Id)">Confirm Reservation</button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="showConfirmModal(@guestReservation.Id)">Confirm</button>
                             </form>
                         }
                         else if (guestReservation.Status == "Confirmed")
@@ -165,53 +153,50 @@
                             <form asp-controller="Admin" asp-action="UpdateGuestReservationStatus" method="post" style="display: inline;" id="cancelForm_@guestReservation.Id">
                                 <input type="hidden" name="id" value="@guestReservation.Id" />
                                 <input type="hidden" name="status" value="Pending" />
-                                <button type="button" class="btn-outline-primary btn-sm" onclick="showCancelConfirmationModal(@guestReservation.Id)">Cancel Confirmation</button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="showCancelConfirmationModal(@guestReservation.Id)">Cancel</button>
                             </form>
                         }
                     </div>
                 </div>
             </div>
-
-            i++;
+            guestIndex++;
         }
     </div>
 
     <partial name="_DeleteConfirmationModal" />
-
 </div>
 
 @section Scripts {
     <script>
         function showDeleteModal(reservationId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            var modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
             document.getElementById('confirmDeleteBtn').onclick = function () {
-                document.getElementById(`deleteForm_${reservationId}`).submit();
+                document.getElementById('deleteForm_' + reservationId).submit();
             };
             modal.show();
         }
 
         function showConfirmModal(reservationId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            var modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
             document.getElementById('confirmDeleteBtn').onclick = function () {
-                document.getElementById(`confirmForm_${reservationId}`).submit();
+                document.getElementById('confirmForm_' + reservationId).submit();
             };
             modal.show();
         }
 
         function showCancelConfirmationModal(reservationId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+            var modal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
             document.getElementById('confirmDeleteBtn').onclick = function () {
-                document.getElementById(`cancelForm_${reservationId}`).submit();
+                document.getElementById('cancelForm_' + reservationId).submit();
             };
             modal.show();
         }
 
         document.getElementById('statusFilter').addEventListener('change', function() {
-            const selectedStatus = this.value;
-            const reservationCards = document.querySelectorAll('[data-reservation]');
-
-            reservationCards.forEach(card => {
-                const cardStatus = card.querySelector('.card').getAttribute('data-status');
+            var selectedStatus = this.value;
+            var reservationCards = document.querySelectorAll('[data-reservation]');
+            reservationCards.forEach(function(card) {
+                var cardStatus = card.querySelector('.card').getAttribute('data-status');
                 if (selectedStatus === 'all' || cardStatus === selectedStatus) {
                     card.style.display = '';
                 } else {
@@ -221,16 +206,3 @@
         });
     </script>
 }
-
-
-<style>
-    .card {
-        transition: transform 0.2s;
-        cursor: pointer;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-</style>

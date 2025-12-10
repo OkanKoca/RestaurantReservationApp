@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - restaurant_reservation_system</title>
+    <title>@ViewData["Title"] - Restaurant Admin</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/restaurant_reservation_system.styles.css" asp-append-version="true" />
 </head>
@@ -19,8 +20,7 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-
-                        @if(!string.IsNullOrEmpty(Context.Session.GetString("token")) && Context.Session.GetString("role") == "Admin")
+                        @if (!string.IsNullOrEmpty(Context.Session.GetString("token")) && Context.Session.GetString("role") == "Admin")
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a>
@@ -41,8 +41,7 @@
                                 <a class="nav-link" asp-controller="Admin" asp-action="Tables" asp-route-id="" asp-route-date="">Tables</a>
                             </li>
                         }
-
-                    </ul>                    
+                    </ul>
                     <ul class="navbar-nav">
                         @if (!string.IsNullOrEmpty(Context.Session.GetString("token")))
                         {
@@ -51,26 +50,13 @@
                             </li>
                         }
                     </ul>
-
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- Move toast container to bottom-right -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1080;">
-        <div class="toast" id="reservationToast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto" id="headerTitle"></strong>
-                <small class="text-body-secondary">@DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm")</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" id="toastBody">
-                
-            </div>
-        </div>
-    </div>
-
+    <!-- Toast Container - Sağ Alt -->
+    <div id="adminToastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px; max-width: 380px;"></div>
 
     <div class="container">
         @if (TempData["SuccessMessage"] != null)
@@ -94,76 +80,56 @@
         <partial name="_UpdateModal" />
     </div>
 
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="~/js/admin-toast.js" asp-append-version="true"></script>
 
     <script>
         async function loadUpdateForm(entityType, id) {
             try {
-                const response = await fetch(`/Admin/Get${entityType}UpdateForm/${id}`);
+                var response = await fetch('/Admin/Get' + entityType + 'UpdateForm/' + id);
                 if (!response.ok) throw new Error('Failed to load form');
-                    
-                const formHtml = await response.text();
+
+                var formHtml = await response.text();
                 document.getElementById('updateModalBody').innerHTML = formHtml;
-                document.getElementById('updateModalTitle').textContent = `Update ${entityType}`;
-                    
-                const modal = new bootstrap.Modal(document.getElementById('updateModal'));
+                document.getElementById('updateModalTitle').textContent = 'Update ' + entityType;
+
+                var modal = new bootstrap.Modal(document.getElementById('updateModal'));
                 modal.show();
             } catch (error) {
-                console.error('Error:', error);
+            console.error('Error:', error);
             }
         }
-    </script>
 
-    <script>
-        function showToast(message, headerTitle, type = 'success') {
-            const toastBodyEl = document.getElementById('toastBody');
-            const headerTitleEl = document.getElementById('headerTitle');
-            const toastEl = document.getElementById('reservationToast');
-
-            if (toastBodyEl) toastBodyEl.innerText = message ?? '';
-            if (headerTitleEl) headerTitleEl.innerText = headerTitle ?? '';
-
-            toastEl.classList.remove('bg-success', 'text-white', 'bg-danger');
-
-            if (type === 'error') {
-                toastEl.classList.add('bg-danger', 'text-white');
-            } else {
-                toastEl.classList.add('bg-success', 'text-white');
-            }
-
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
-
-        const connection = new signalR.HubConnectionBuilder()
+        document.addEventListener('DOMContentLoaded', function() {
+            var connection = new signalR.HubConnectionBuilder()
             .withUrl("https://localhost:7284/adminHub")
+            .withAutomaticReconnect()
             .build();
 
-        connection.on("NewReservation", (data) => {
-            console.log("Yeni rezervasyon:", data);
-            showToast(`${data.customerName} - Masa ${data.reservationTable} - Tarih: ${data.reservationDate} ${data.reservationHour}`, "New Reservation", 'success');
+            connection.on("NewReservation", function(data) {
+                console.log("New reservation:", data);
+            if (typeof AdminToast !== 'undefined') {
+                    AdminToast.newReservation(data);
+            }
         });
 
-        connection.on("ReservationCanceled", (data) => {
-            console.log("Rezervasyon iptal:", data);
-            const name = data.customerName ?? data.fullName ?? 'Customer';
-            const table = data.reservationTable ?? data.tableNumber ?? '';
-            const date = data.reservationDate ?? data.date ?? '';
-            const hour = data.reservationHour ?? data.hour ?? '';
-            const info = [table ? `Masa ${table}` : null, date, hour].filter(Boolean).join(' ');
-            showToast(`${name}${info ? ' - ' + info : ''}`, "Reservation Canceled", 'error');
+        connection.on("ReservationCanceled", function(data) {
+            console.log("Reservation canceled:", data);
+            if (typeof AdminToast !== 'undefined') {
+                AdminToast.canceledReservation(data);
+            }
         });
 
         connection.start()
-            .catch(err => console.error(err));
+        .then(function() { console.log("SignalR connected"); })
+        .catch(function(err) { console.error("SignalR error:", err); });
+
+        });
     </script>
 
-
     @await RenderSectionAsync("Scripts", required: false)
-
 </body>
 </html>

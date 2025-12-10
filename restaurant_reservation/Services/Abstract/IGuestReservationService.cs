@@ -10,7 +10,7 @@ namespace restaurant_reservation.Services.Abstract
         Task<(bool Success, string? ErrorMessage, GuestReservation? Reservation)> CreateGuestReservationAsync(GuestReservationDto dto);
         void UpdateGuestReservation(int id, GuestReservation guestReservation);
         (bool Success, GuestReservation? Reservation) DeleteGuestReservation(int id);
-        bool ToggleReservationStatus(int id);
+        Task<bool> ToggleReservationStatusAsync(int id);
         Task<List<string>> GetAvailableHoursAsync(DateTime date);
     }
 }
