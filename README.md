@@ -1,75 +1,149 @@
 # Restaurant Reservation Application 🍽️
 
-A modern ASP.NET Core application for managing restaurant reservations, built with .NET 8.
+A modern **restaurant reservation system** built with **ASP.NET Core 8 Web API**, **ASP.NET Core 8 MVC**  and **Entity Framework Core 9**.
 
-## Features 🚀
+The application covers the full flow:
 
-- **User Management 👤**
-  - User registration and authentication
-  - Role-based authorization (Admin / Customer)
-  - JWT Authentication & Profile management
+- Guest can book a table without an account
+- Registered users can manage their own reservations
+- Admins manage tables, menus, users and reservations
+- Plus **real-time notifications (SignalR)**, **caching (Redis)** and **async messaging (RabbitMQ)** integrations to mimic a production-ready system.
 
-- **Reservation System 📅**
-  - Table booking for registered users
-  - Guest reservations (without account)
-  - Automatic reservation status updates (if it is outdated)
-  - Table availability tracking
+---
 
-- **Admin Panel 🔧**
-  - Manage reservations, menus, and tables
-  - Update reservation status (e.g., Confirmed, Pending)
-  - Clear, user-friendly dashboard views
+## Overview
 
-- **Menu Management 🍕🍹**
-  - Organize food & drink items
-  - Categorize menus
-  - Display dietary information, pricing, etc.
+This project is designed as a **full-stack .NET reservation system** that you can show in interviews as a realistic example of:
+
+- Authentication & authorization (Identity + roles + JWT)
+- CRUD operations with a relational data model (EF Core)
+- Admin vs user vs guest flows
+- Real-time communication (SignalR)
+- Caching with Redis
+- Asynchronous processing with RabbitMQ
+
+---
+
+## Core Features
+
+### User Management 👤
+
+- User registration & login via **ASP.NET Core Identity**
+- Role-based authorization:
+  - `Admin`
+  - `Customer` / normal user
+- **JWT authentication** support for API / future integrations:
+  - Token generation on login
+  - Token validation for protected endpoints
+
+---
+
+### Reservation System 📅
+
+- Table booking for **registered users**
+- **Guest reservations** without creating an account
+- Reservation lifecycle:
+  - `Pending`
+  - `Confirmed`
+  - `Outdated` (automatically set when reservation time is in the past)
+- Table availability checks to prevent conflicting bookings
+- Users can:
+  - See all their reservations (past + upcoming)
+  - Cancel upcoming reservations before the reservation date
+
+---
+
+### Admin Panel 🔧
+
+- Central dashboard with key metrics:
+  - Total reservations
+  - Upcoming reservations
+  - Outdated / pending reservations
+- Reservation management:
+  - Confirm / reject / delete reservations
+  - Filter reservations by status (Pending, Confirmed, Outdated, etc.)
+- User management:
+  - List all users
+  - Grant / revoke admin role
+  - Delete user accounts
+- All admin pages protected by **role-based authorization**
+
+---
+
+### Real-time Notifications (SignalR)
+
+The application integrates **SignalR** to push real-time updates without page refresh:
+
+- When a new reservation is created:
+  - Admin dashboard can receive **instant notifications**
+- When an admin changes a reservation’s status (e.g. Pending → Confirmed):
+  - The relevant user can be **notified in real time**
+- SignalR hubs are used to:
+  - Separate admin and user channels
+  - Broadcast events like *reservation created* / *status changed*
+
+This demonstrates how to add **real-time capabilities** on top of a classical Razor Pages app.
+
+---
+
+### Caching (Redis)
+
+The project uses **Redis** as a distributed cache to improve performance and reduce database load:
+
+- Frequently read data such as:
+  - Menus (foods & drinks)
+  - Table definitions
+- are cached in Redis behind a clean abstraction.
+
+Typical behaviours:
+
+- On read:
+  - Check Redis cache first
+  - Fallback to database if not present
+- On write/update:
+  - Update DB
+  - Invalidate or refresh related cache keys
+
+---
+
+### Async Messaging (RabbitMQ)
+
+The application integrates **RabbitMQ** for asynchronous, decoupled operations:
+
+- When certain events happen (for example):
+  - Reservation created
+  - Reservation confirmed/cancelled
+- The app publishes messages to RabbitMQ (e.g. `ReservationCreated`, `ReservationStatusChanged`).
+
+A background worker / consumer can:
+
+- Listen to these messages
+- Trigger side effects such as:
+  - Sending email notifications
+  - Logging / auditing
+  - Future integration with external services
+
+---
 
 ## Tech Stack 💻
 
-- **Backend:**
-  - ASP.NET Core 8 (Razor Pages)
-  - Entity Framework Core 9
-  - SQLite database
-  - Identity Framework with JWT Bearer Authentication
+### Backend
 
-- **Frontend:**
-  - Razor Pages
-  - Bootstrap 5 & Font Awesome
-  - HTML5, CSS3, and JavaScript
- 
-## 📸 Screenshots
+- **.NET 8**
+- **ASP.NET Core 8 (Razor Pages)**
+- **Entity Framework Core 9**
+- **ASP.NET Core Identity** (roles, users)
+- **JWT Bearer Authentication**
+- **SQLite** (development database)
+- **SignalR** for real-time communication
+- **Redis** for distributed caching
+- **RabbitMQ** for messaging
 
-### 🏠 Home Page
-<img src="screenshots/homepage.png" alt="Home Page" width="800"/>
+### Frontend
 
+- Razor Pages
+- Bootstrap 5
+- Font Awesome
+- HTML5, CSS3, JavaScript
 
-### 📅 Reservation Pages
-<p>This page is for guests.</p>
-<img src="screenshots/guestreservation.png" alt="Guest Reservation Page" width="800"/>
-<p>This page is for users.</p>
-<img src="screenshots/userreservation.png" alt="User Reservation Page" width="800"/>
-
-### 👤 User Dashboard
-<img src="screenshots/loginpage.png" alt="login Page" width="800"/>
-<p>Here users can see their own reservations and cancel them.</p>
-<img src="screenshots/myreservations.png" alt="My Reservations Page" width="800"/>
-
-### 🍽️ Menus
-<img src="screenshots/allmenus.png" alt="Menus Page" width="800"/>
-<img src="screenshots/menu.png" alt="My Reservations Page" width="800"/>
-
-### 👤 Admin Dashboard
-<img src="screenshots/adminpanel.png" alt="Admin Dashboard" width="800"/>
-<p>Admin can authorize a user or delete their account.</p>
-<img src="screenshots/adminusers.png" alt="Admin Users" width="800"/>
-<p>Admin can confirm a reservation and delete them.</p>
-<img src="screenshots/adminreservations.png" alt="Admin reservations page" width="800"/>
-<p>Admin can filter reservations to see only pending, outdated ones.</p>
-<img src="screenshots/filteredreservations.png" alt="Admin filtered reservations" width="800"/>
-<img src="screenshots/foods.png" alt="Admin foods" width="800"/>
-<img src="screenshots/drinks.png" alt="Admin drinks" width="800"/>
-<img src="screenshots/adminmenus.png" alt="Admin menus" width="800"/>
-<p>Admin can check a table's occupancy, reservations and add, delete table.</p>
-<img src="screenshots/tablesandpoccupancies.png" alt="Admin tables and table occupancies" width="800"/>
-
+---
